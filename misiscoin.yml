@@ -1,0 +1,42 @@
+openapi: '3.0.2'
+info:
+  title: MISIS Coin API
+  version: '1.0'
+servers:
+  - url: http://localhost:8000
+    description: Local server
+components:
+  securitySchemes:
+    MisisCoinTGUserId:
+      type: apiKey
+      in: header
+      name: misiscoin-tguid
+    TGQueryCheckString:
+      type: apiKey
+      in: header
+      name: misiscoin-tgquerycheckstring
+paths:
+  /version:
+    get:
+      operationId: version
+      security: []
+      responses:
+        '200': 
+          description: OK
+  /tgconfig:
+    get:
+      operationId: tgconfig
+      security: []
+      responses:
+        '200': 
+          description: OK
+  /telegram:
+    post:
+      operationId: telegram
+      security: []
+      responses:
+        '200':
+          description: OK
+security:
+  - MisisCoinTGUserId: []
+    TGQueryCheckString: []
