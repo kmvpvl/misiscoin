@@ -95,7 +95,7 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                     [{text: "БЭК-24-4", callback_data: "setgroup:БЭК-24-4"}],
                     [{text: "БЭК-24-5", callback_data: "setgroup:БЭК-24-5"}],
                     [{text: "БЭК-24-6", callback_data: "setgroup:БЭК-24-6"}],
-                    [{text: "БЭТД-24-1", callback_data: "setgroup:БЭК-24-6"}],
+                    [{text: "БТД-24-1", callback_data: "setgroup:БТД-24-1"}],
                     ]}});
                 }
                 break;
@@ -119,13 +119,13 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                         return false;
                     }
 
-                    if (what === "c" && !person.json.emission) {
+                    if (what === "c" && person.json.emission === undefined) {
                         const limit = balance.reduce<number>((prev, cur)=>(cur.validthru===undefined?cur.sum:0)+prev, 0);
                         if (limit < count) bot.sendMessage(chat_id, `Not enough beans on your account. Limit is ${limit}`);
                         return true;
                     }
                     
-                    if (what === "v" && !person.json.emission) {
+                    if (what === "v" && person.json.emission === undefined) {
                         const limit = balance.reduce<number>((prev, cur)=>(cur.validthru!==undefined?cur.sum:0)+prev, 0);
                         if (limit < count) bot.sendMessage(chat_id, `Not enough beans on your account. Limit is ${limit}`);
                         return true;
