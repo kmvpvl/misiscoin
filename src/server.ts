@@ -68,6 +68,7 @@ export async function setupTelegramBot(bot: TelegramBot): Promise<any> {
                 {command: "operations", description: "My last 10 operations"}, 
                 {command: "balance", description: "My current net balance"}, 
                 {command: "settings", description: "My settings"}, 
+                /*{command: "newproduct", description: "Create new product"},*/ 
                 {command: "help", description: "List of available commands"}]);
             res.setMyCommandsSuccess.push(ret);
             console.log(`${colours.fg.green}Setting TG setMyCommand successful = '${JSON.stringify(ret)}'${colours.reset}`);

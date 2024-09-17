@@ -121,14 +121,18 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
 
                     if (what === "c" && person.json.emission === undefined) {
                         const limit = balance.reduce<number>((prev, cur)=>(cur.validthru===undefined?cur.sum:0)+prev, 0);
-                        if (limit < count) bot.sendMessage(chat_id, `Not enough beans on your account. Limit is ${limit}`);
-                        return true;
+                        if (limit < count) {
+                            bot.sendMessage(chat_id, `Not enough beans on your account. Limit is ${limit}`);
+                            return true;
+                        }
                     }
                     
                     if (what === "v" && person.json.emission === undefined) {
                         const limit = balance.reduce<number>((prev, cur)=>(cur.validthru!==undefined?cur.sum:0)+prev, 0);
-                        if (limit < count) bot.sendMessage(chat_id, `Not enough beans on your account. Limit is ${limit}`);
-                        return true;
+                        if (limit < count) {
+                            bot.sendMessage(chat_id, `Not enough beans on your account. Limit is ${limit}`);
+                            return true;
+                        }
                     }
 
                     if (whomProduct !== undefined) {
@@ -186,7 +190,17 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                 const help = "/start - shows your Telegram id to get MISIS Coins\n/balance - reveals your own and your products current net balance and date of expiration your coins\n/spend - allows your spending coins to product or another persons' services\n/operations - 10 last operations of your account";
                 bot.sendMessage(chat_id, help);
                 break;
+            /*case '/newproduct':
+                const product = new Product(undefined, {
+                    owner: person.uid,
+                    name:"",
+                    desc:"",
+                    blocked: false,
+                    created: new Date()
+                });
+                break;*/
             case '/emission':
+                if (person.json.emission === undefined || !person.json.emission) return true;
                 if (msg_arr?.length !== 2) {
                     bot.sendMessage(chat_id, `Wrong format of command '/emission'. Try /emission groupname`);
                     return false;
