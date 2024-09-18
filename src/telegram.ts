@@ -82,7 +82,7 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                 bot.sendMessage(chat_id, `Your products:\n${str.join("\n")}`);
                 const own = await person.balance();
                 const str_own = own.map((r, i)=>`${r.sum} - ${r.validthru?`valid thru: ${r.validthru?.toLocaleDateString()}`:""} ${r.spendupto?`spend up to: ${r.spendupto?.toLocaleDateString()}`:""}${!r.validthru && !r.spendupto?"constant":""}`);
-                bot.sendMessage(chat_id, `Your own:\n${str_own.join("\n")}`);
+                bot.sendMessage(chat_id, `Your own:\n${str_own.join("\n")}`.substring(0, 399));
                 break;
             case '/settings':
                 if (person.json.group !== undefined) {
