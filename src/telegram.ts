@@ -95,6 +95,7 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                     [{text: "БЭК-24-4", callback_data: "setgroup:БЭК-24-4"}],
                     [{text: "БЭК-24-5", callback_data: "setgroup:БЭК-24-5"}],
                     [{text: "БЭК-24-6", callback_data: "setgroup:БЭК-24-6"}],
+                    [{text: "БЭК-24-7", callback_data: "setgroup:БЭК-24-7"}],
                     [{text: "БТД-24-1", callback_data: "setgroup:БТД-24-1"}],
                     ]}});
                 }
