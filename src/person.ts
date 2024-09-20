@@ -60,7 +60,7 @@ export default class Person extends MongoProto<IPerson> {
     }
     async balance(): Promise<Balance> {
         const debet: Balance = await mongoTransactions.aggregate(
-        [{$match: {to: this.uid, $expr: {$or: [{$gt: ["$spendupto", "$now"]},{$not: "$spendupto"}]}}},
+        [{$match: {to: this.uid, $expr: {$or: [true,{$not: "$spendupto"}]}}},
         {$group: {_id: {validthru: "$validthru",spendupto: "$spendupto"},sum: {$sum: "$count"}}},
         {$addFields: {spendupto: "$_id.spendupto",validthru: "$_id.validthru"}},
         {$sort: {"_id.spendupto": -1,"_id.validthru": -1}}

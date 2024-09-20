@@ -80,9 +80,14 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                     str.push( `${p.name}: ${p.desc} = ${bal_str}`);
                 }
                 bot.sendMessage(chat_id, `Your products:\n${str.join("\n")}`);
+
                 const own = await person.balance();
-                const str_own = own.map((r, i)=>`${r.sum} - ${r.validthru?`valid thru: ${r.validthru?.toLocaleDateString()}`:""} ${r.spendupto?`spend up to: ${r.spendupto?.toLocaleDateString()}`:""}${!r.validthru && !r.spendupto?"constant":""}`);
-                bot.sendMessage(chat_id, `Your own:\n${str_own.join("\n")}`.substring(0, 399));
+
+                const balance_c = own.reduce<number>((prev, cur)=>(cur.validthru===undefined?cur.sum:0)+prev, 0);
+                const balance_v = own.reduce<number>((prev, cur)=>(cur.validthru!==undefined?cur.sum:0)+prev, 0);
+                const spendupto = own.reduce<number>((prev, cur)=>(cur.spendupto!==undefined?cur.sum:0)+prev, 0);
+
+                bot.sendMessage(chat_id, `Your own:\n$${balance_c} - permanent\n$${balance_v} - validthru 01.01.25`.substring(0, 399));
                 break;
             case '/settings':
                 if (person.json.group !== undefined) {
