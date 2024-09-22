@@ -107,7 +107,7 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
         const msg_arr = tgData.message?.text?.split(" ");
         switch (command_name) {
             case '/start': 
-                bot.sendMessage(chat_id, `Welcome! Your id is ${chat_id}. Use this number as your account to receive coins`);
+                bot.sendMessage(chat_id, `Привет, студент! Этот бот создан с целью вложения или получения бобов. Искренне верим, что вам удастся воспользоваться им правильно и получить заветную оценку. Удачи!\nВаш Telegram ID '${chat_id}'. Используйте его для получения бобов`);
                 return true;
             case '/balance':
                 const products = await person.getProducts();
