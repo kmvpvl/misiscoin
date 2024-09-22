@@ -1,7 +1,7 @@
 import TelegramBot from "node-telegram-bot-api";
 import colours from "./colours";
 import { Request, Response } from 'express';
-import Person, { mongoPersons } from "./person";
+import Person, { IPerson, mongoPersons } from "./person";
 import Product from "./product";
 import Transaction from "./transaction";
 import { Types } from "mongoose";
@@ -104,7 +104,7 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
     for (let [i, c] of Object.entries(commands as Array<TelegramBot.MessageEntity>)) {
         const command_name = tgData.message?.text?.substring(c.offset, c.offset + c.length);
         console.log(`${colours.fg.green}Processing command = '${command_name}'${colours.reset}`);
-        const msg_arr = tgData.message?.text?.split(" ");
+        const msg_arr = tgData.message?.text?.split(" ") as Array<string>;
         switch (command_name) {
             case '/start': 
                 bot.sendMessage(chat_id, `Привет, студент! Этот бот создан с целью вложения или получения бобов. Искренне верим, что вам удастся воспользоваться им правильно и получить заветную оценку. Удачи!\nВаш Telegram ID '${chat_id}'. Используйте его для получения бобов`);
@@ -265,6 +265,13 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                     }
                     return true;
                 }
+            case "/broadcast":
+                if (person.json.emission === undefined || !person.json.emission) return true;
+                const all_persons = await mongoPersons.aggregate<IPerson>([{$match: {"blocked": false}}]);
+                all_persons.forEach((p, i)=> {
+                    setTimeout(()=>bot.sendMessage(p.tguserid, msg_arr[1]), i * 2000);
+                });
+                return true;
             default: 
                 bot.sendMessage(chat_id, `'${command_name}' is unknoun command. Check your spelling`);
                 return true;
