@@ -25,12 +25,12 @@ export default async function telegram(c: any, req: Request, res: Response, bot:
 
         if (tgData.callback_query !== undefined) {
             // it's callback
-            callback_process(tgData, bot, personDraft);
+            await callback_process(tgData, bot, personDraft);
             return res.status(200).json("OK");
         }
         
         // it isn't callback. This message may be command or data from user or message to support
-        message_process(tgData, bot, personDraft);
+        await message_process(tgData, bot, personDraft);
         return res.status(200).json("OK");
 
     } catch (e) {
@@ -54,7 +54,46 @@ async function callback_process(tgData: TelegramBot.Update, bot: TelegramBot, pe
 }
 
 async function message_process(tgData: TelegramBot.Update, bot: TelegramBot, person: Person): Promise<boolean> {
-    return command_process(tgData, bot, person);
+    if (!await command_process(tgData, bot, person)) {
+        const chat_id = tgData.message?.chat.id as number;
+        const command_d = person.json.awaitcommanddata?.split(":", 2);
+        if (command_d === undefined) return true; 
+        switch (command_d[0]) {
+            case "ProductLongName":
+                bot.sendMessage(chat_id, "Now enter short id of your product");
+                await person.setAwaitCommandData(`ProductShortName:${tgData.message?.text}`);
+                break;
+            case "ProductShortName":
+                const name_candidate = tgData.message?.text as string;
+                if (name_candidate?.includes(" ")) {
+                    bot.sendMessage(chat_id, "Short name should not include space. Try again");
+                    return true;
+                } else {
+                    const p = await Product.getByName(name_candidate);
+                    if (p !== undefined) {
+                        bot.sendMessage(chat_id, "This short name already in use. Enter new one and try again");
+                        return true;
+                    } else {
+                        const p = new Product(undefined, {
+                            name: name_candidate,
+                            owner: person.uid,
+                            desc: command_d[1],
+                            created: new Date(),
+                            blocked: false
+                        });
+                        await p.save();
+                        
+                        await person.setAwaitCommandData();
+                        bot.sendMessage(chat_id, "Product created successfully. Check your balance");
+                    }
+                }
+                break;
+            default:
+                await person.setAwaitCommandData();
+                bot.sendMessage(chat_id, "Unknown command");
+        }
+    }
+    return true
 }
 async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, person: Person): Promise<boolean> {
     // looking for bot-command from user
@@ -69,7 +108,7 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
         switch (command_name) {
             case '/start': 
                 bot.sendMessage(chat_id, `Welcome! Your id is ${chat_id}. Use this number as your account to receive coins`);
-                break;
+                return true;
             case '/balance':
                 const products = await person.getProducts();
                 let str = [];
@@ -85,10 +124,12 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
 
                 const balance_c = own.reduce<number>((prev, cur)=>(cur.validthru===undefined?cur.sum:0)+prev, 0);
                 const balance_v = own.reduce<number>((prev, cur)=>(cur.validthru!==undefined?cur.sum:0)+prev, 0);
-                const spendupto = own.reduce<number>((prev, cur)=>(cur.spendupto!==undefined?cur.sum:0)+prev, 0);
+                const spendupto = own.reduce<number>((prev, cur)=>{
+                    return (cur.validthru !== undefined && cur.spendupto === undefined || cur.spendupto!==undefined && cur.spendupto > new Date()?cur.sum:0)
+                    +prev}, 0);
 
-                bot.sendMessage(chat_id, `Your own:\n$${balance_c} - permanent\n$${balance_v} - validthru 01.01.25`.substring(0, 399));
-                break;
+                bot.sendMessage(chat_id, `Your own:\n$${balance_c} - permanent\n$${balance_v} - validthru 01.01.25\n$${spendupto} - accessible`.substring(0, 399));
+                return true;
             case '/settings':
                 if (person.json.group !== undefined) {
                     bot.sendMessage(chat_id, `Your group is ${person.json.group}`);
@@ -104,7 +145,7 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                     [{text: "БТД-24-1", callback_data: "setgroup:БТД-24-1"}],
                     ]}});
                 }
-                break;
+                return true;
             case '/spend':
                 if (msg_arr?.length !== 4) {
                     bot.sendMessage(chat_id, `Wrong format of command '/spend'. Try /spend whom howmuch options`);
@@ -176,7 +217,7 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                         return true;
                     }
                 }
-                break;
+                return true;
             case '/operations':
                 const trs = await person.lastOperations();
                 let op_str = "";
@@ -191,25 +232,19 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                 }
                 if (op_str !== "") await bot.sendMessage(chat_id, op_str);
                 return true;
-                break;
             case '/help':
                 const help = "/start - shows your Telegram id to get MISIS Coins\n/balance - reveals your own and your products current net balance and date of expiration your coins\n/spend - allows your spending coins to product or another persons' services\n/operations - 10 last operations of your account";
                 bot.sendMessage(chat_id, help);
-                break;
-            /*case '/newproduct':
-                const product = new Product(undefined, {
-                    owner: person.uid,
-                    name:"",
-                    desc:"",
-                    blocked: false,
-                    created: new Date()
-                });
-                break;*/
+                return true;
+            case '/newproduct':
+                await person.setAwaitCommandData("ProductLongName");
+                bot.sendMessage(chat_id, "Enter product's long name");
+                return true;
             case '/emission':
                 if (person.json.emission === undefined || !person.json.emission) return true;
                 if (msg_arr?.length !== 2) {
                     bot.sendMessage(chat_id, `Wrong format of command '/emission'. Try /emission groupname`);
-                    return false;
+                    return true;
                 } else {
                     const whom = msg_arr[1];
                     const persons = await mongoPersons.aggregate([
@@ -230,11 +265,10 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                     }
                     return true;
                 }
-                break;
             default: 
                 bot.sendMessage(chat_id, `'${command_name}' is unknoun command. Check your spelling`);
-                return false;
+                return true;
         }
     }
-    return true;
+    return false;
 }

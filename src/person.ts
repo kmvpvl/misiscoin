@@ -58,6 +58,14 @@ export default class Person extends MongoProto<IPerson> {
             await this.save();
         }
     }
+    async setAwaitCommandData(awaitid?: string) {
+        this.checkData();
+        if (this.data !== undefined) {
+            this.data.awaitcommanddata = awaitid;
+            await this.save();
+        }
+    }
+
     async balance(): Promise<Balance> {
         const debet: Balance = await mongoTransactions.aggregate(
         [{$match: {to: this.uid, $expr: {$or: [true,{$not: "$spendupto"}]}}},
