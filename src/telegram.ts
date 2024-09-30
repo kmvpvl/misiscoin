@@ -111,14 +111,14 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                 return true;
             case '/balance':
                 const products = await person.getProducts();
-                let str = [];
+                let menu = [];
                 for (const p of products) {
                     const prodObj = new Product(undefined, p);
                     const balance = await prodObj.balance();
                     const bal_str = balance.reduce((prev, cur)=>prev+cur.sum, 0);
-                    str.push( `${p.name}: ${p.desc} = ${bal_str}`);
+                    menu.push( [{text: `${p.name}: ${p.desc} = ${bal_str}`, web_app: {url: `${process.env.tg_web_hook_server}/product.html?name=${encodeURIComponent(p.name)}`}}]);
                 }
-                bot.sendMessage(chat_id, `Your products:\n${str.join("\n")}`);
+                bot.sendMessage(chat_id, `Your products`, {reply_markup:{inline_keyboard:menu}});
 
                 const own = await person.balance();
 

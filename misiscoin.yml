@@ -37,6 +37,12 @@ paths:
       responses:
         '200':
           description: OK
+  /productbalance:
+    post:
+      operationId: productbalance
+      responses:
+        '200':
+          description: OK
 security:
   - MisisCoinTGUserId: []
     TGQueryCheckString: []

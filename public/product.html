@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="stylesheet" href="misiscoin.css"/>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="fetch.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+<script>
+    Telegram.WebApp.expand();
+    const params = new URLSearchParams(document.location.search);
+    $(document).ready(()=> {
+        fetchCommand("productbalance", {productname: params.get("name")}, res=>{
+            const balance = res.balance;
+            const product = res.product;
+            $('#product').text(`${product.name}: ${product.desc}`);
+        }, err=>{
+            debugger
+        });
+    })
+</script>
+</head>
+<body>
+    <img src="logo.png" style="width: 20%;">
+    <div id="version"></div>
+    <div id="product"></div>
+    <div id="balance"></div>
+</body>
+</html>
