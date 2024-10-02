@@ -34,7 +34,7 @@ export default async function telegram(c: any, req: Request, res: Response, bot:
         return res.status(200).json("OK");
 
     } catch (e) {
-        bot.sendMessage(tgUserId, 'Sorry, your account not created. Press /start or call to support');
+        bot.sendMessage(tgUserId, 'Извините, Ваш аккаунт не найден. Выполните команду /start');
         return res.status(200).json("User not found");
     }
 }
@@ -47,7 +47,7 @@ async function callback_process(tgData: TelegramBot.Update, bot: TelegramBot, pe
     switch(cbcommand[0]) {
         case 'setgroup':
             await person.setGroup(cbcommand[1]);
-            bot.answerCallbackQuery(tgData.callback_query?.id as string, {text: `Group selected`});
+            bot.answerCallbackQuery(tgData.callback_query?.id as string, {text: `Группа выбрана`});
             break;
     }
     return true;
@@ -60,18 +60,18 @@ async function message_process(tgData: TelegramBot.Update, bot: TelegramBot, per
         if (command_d === undefined) return true; 
         switch (command_d[0]) {
             case "ProductLongName":
-                bot.sendMessage(chat_id, "Now enter short id of your product");
+                bot.sendMessage(chat_id, "Теперь введите короткий идентификатор продукта");
                 await person.setAwaitCommandData(`ProductShortName:${tgData.message?.text}`);
                 break;
             case "ProductShortName":
                 const name_candidate = tgData.message?.text as string;
                 if (name_candidate?.includes(" ")) {
-                    bot.sendMessage(chat_id, "Short name should not include space. Try again");
+                    bot.sendMessage(chat_id, "Идентификатор продукта не должен содержать пробелы");
                     return true;
                 } else {
                     const p = await Product.getByName(name_candidate);
                     if (p !== undefined) {
-                        bot.sendMessage(chat_id, "This short name already in use. Enter new one and try again");
+                        bot.sendMessage(chat_id, "Этот идентификатор уже использован. Придумайте новый и попробуйте снова");
                         return true;
                     } else {
                         const p = new Product(undefined, {
@@ -84,13 +84,13 @@ async function message_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                         await p.save();
                         
                         await person.setAwaitCommandData();
-                        bot.sendMessage(chat_id, "Product created successfully. Check your balance");
+                        bot.sendMessage(chat_id, "Продукт создан, проверьте баланс");
                     }
                 }
                 break;
             default:
                 await person.setAwaitCommandData();
-                bot.sendMessage(chat_id, "Unknown command");
+                bot.sendMessage(chat_id, "Неизвестная команда");
         }
     }
     return true
@@ -118,23 +118,24 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                     const bal_str = balance.reduce((prev, cur)=>prev+cur.sum, 0);
                     str.push( `${p.name}: ${p.desc} = ${bal_str}`);
                 }
-                bot.sendMessage(chat_id, `Your products:\n${str.join("\n")}`);
+                bot.sendMessage(chat_id, `Ваши продукты:\n${str.join("\n")}`);
 
                 const own = await person.balance();
 
                 const balance_c = own.reduce<number>((prev, cur)=>(cur.validthru===undefined?cur.sum:0)+prev, 0);
                 const balance_v = own.reduce<number>((prev, cur)=>(cur.validthru!==undefined?cur.sum:0)+prev, 0);
-                const spendupto = own.reduce<number>((prev, cur)=>{
-                    return (cur.validthru !== undefined && cur.spendupto === undefined || cur.spendupto!==undefined && cur.spendupto > new Date()?cur.sum:0)
+                let spendupto = own.reduce<number>((prev, cur)=>{
+                    return (cur.validthru!==undefined && cur.spendupto===undefined || cur.spendupto!==undefined && cur.spendupto > new Date()?cur.sum:0)
                     +prev}, 0);
-
-                bot.sendMessage(chat_id, `Your own:\n$${balance_c} - permanent\n$${balance_v} - validthru 01.01.25\n$${spendupto} - accessible`.substring(0, 399));
+                spendupto = Math.min(balance_v, spendupto);
+                if (spendupto < 0) spendupto = 0;
+                bot.sendMessage(chat_id, `Ваш личный счет:\n$${balance_c} - постоянные\n$${balance_v} - временные 01.01.25\n$${spendupto} - доступные`.substring(0, 399));
                 return true;
             case '/settings':
                 if (person.json.group !== undefined) {
-                    bot.sendMessage(chat_id, `Your group is ${person.json.group}`);
+                    bot.sendMessage(chat_id, `Ваша группа - ${person.json.group}`);
                 } else {
-                    bot.sendMessage(chat_id, `Select group`, {reply_markup: {inline_keyboard: [
+                    bot.sendMessage(chat_id, `Выберите группу`, {reply_markup: {inline_keyboard: [
                     [{text: "БЭК-24-1", callback_data: "setgroup:БЭК-24-1"}],
                     [{text: "БЭК-24-2", callback_data: "setgroup:БЭК-24-2"}],
                     [{text: "БЭК-24-3", callback_data: "setgroup:БЭК-24-3"}],
@@ -148,7 +149,7 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                 return true;
             case '/spend':
                 if (msg_arr?.length !== 4) {
-                    bot.sendMessage(chat_id, `Wrong format of command '/spend'. Try /spend whom howmuch options`);
+                    bot.sendMessage(chat_id, `Неправильный формат команды '/spend'. Попробуйте /spend whom howmuch options`);
                     return false;
                 } else {
                     const whom = msg_arr[1];
@@ -158,26 +159,33 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                     const what = msg_arr[3];
                     const balance = await person.balance();
                     if (isNaN(count) || count <= 0) {
-                        bot.sendMessage(chat_id, "2nd parameter of '/spend' command must be positive integer number");
+                        bot.sendMessage(chat_id, "2-й параметр команды '/spend' должен быть положительным целым числом");
                         return false;
                     }
                     if (what !== "c" && what !== "v") {
-                        bot.sendMessage(chat_id, "3rd parameter of '/spend' command must be one letter: 'c' - constant or 'v' - valide thru");
+                        bot.sendMessage(chat_id, "3-й параметр команды '/spend' должен быть латинской буквой: 'c' - постоянные или 'v' - временные");
                         return false;
                     }
 
                     if (what === "c" && person.json.emission === undefined) {
                         const limit = balance.reduce<number>((prev, cur)=>(cur.validthru===undefined?cur.sum:0)+prev, 0);
                         if (limit < count) {
-                            bot.sendMessage(chat_id, `Not enough beans on your account. Limit is ${limit}`);
+                            bot.sendMessage(chat_id, `Недостаточно бобов для выполнения операции. Лимит ${limit}`);
                             return true;
                         }
                     }
                     
                     if (what === "v" && person.json.emission === undefined) {
-                        const limit = balance.reduce<number>((prev, cur)=>(cur.validthru!==undefined?cur.sum:0)+prev, 0);
-                        if (limit < count) {
-                            bot.sendMessage(chat_id, `Not enough beans on your account. Limit is ${limit}`);
+                        //const limit = balance.reduce<number>((prev, cur)=>(cur.validthru!==undefined?cur.sum:0)+prev, 0);
+                        const balance_v = balance.reduce<number>((prev, cur)=>(cur.validthru!==undefined?cur.sum:0)+prev, 0);
+                        let spendupto = balance.reduce<number>((prev, cur)=>{
+                            return (cur.validthru!==undefined && cur.spendupto===undefined || cur.spendupto!==undefined && cur.spendupto > new Date()?cur.sum:0)
+                            +prev}, 0);
+                        spendupto = Math.min(balance_v, spendupto);
+                        if (spendupto < 0) spendupto = 0;
+                        
+                        if (spendupto < count) {
+                            bot.sendMessage(chat_id, `Недостаточно бобов для выполнения операции. Лимит ${spendupto}`);
                             return true;
                         }
                     }
@@ -194,8 +202,8 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                         const productownder = new Person(whomProduct.json.owner);
                         await productownder.load();
                         await tr.save();
-                        bot.sendMessage(chat_id, `You've paid ${count} to product '${whomProduct.json.desc}' successfully`);
-                        bot.sendMessage(productownder.json.tguserid, `Your product '${whomProduct.json.desc}' got payment ${count}`);
+                        bot.sendMessage(chat_id, `Вы заплатили ${count} на продукт '${whomProduct.json.desc}'`);
+                        bot.sendMessage(productownder.json.tguserid, `На продукт '${whomProduct.json.desc}' перечислено ${count}`);
                         return true;
                     }
                     if (whomPerson !== undefined) {
@@ -213,7 +221,7 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                         return true;
                     }
                     if (whomProduct === undefined && whomPerson === undefined) {
-                        bot.sendMessage(chat_id, `It's NOT recognized the receiver of payment`);
+                        bot.sendMessage(chat_id, `Не получилось распознать получателя платежа`);
                         return true;
                     }
                 }
@@ -233,17 +241,17 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                 if (op_str !== "") await bot.sendMessage(chat_id, op_str);
                 return true;
             case '/help':
-                const help = "/start - shows your Telegram id to get MISIS Coins\n/balance - reveals your own and your products current net balance and date of expiration your coins\n/spend - allows your spending coins to product or another persons' services\n/operations - 10 last operations of your account";
+                const help = "/start - начать (получить Telegram ID) \n/balance - Мой текущий баланс\n/spend - позволяет вкладывать бобы в проекты или передавать их иным лицам\n/operations - отображает ваши последние 10 операций";
                 bot.sendMessage(chat_id, help);
                 return true;
             case '/newproduct':
                 await person.setAwaitCommandData("ProductLongName");
-                bot.sendMessage(chat_id, "Enter product's long name");
+                bot.sendMessage(chat_id, "Введите наименование продукта");
                 return true;
             case '/emission':
                 if (person.json.emission === undefined || !person.json.emission) return true;
                 if (msg_arr?.length !== 2) {
-                    bot.sendMessage(chat_id, `Wrong format of command '/emission'. Try /emission groupname`);
+                    bot.sendMessage(chat_id, `Неправильный формат команды '/emission'. Попробуйте /emission groupname`);
                     return true;
                 } else {
                     const whom = msg_arr[1];
@@ -261,7 +269,7 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                             spendupto: new Date(new Date().getTime() + 1000*60*60*24*7)
                         });
                         await tr.save();
-                        bot.sendMessage(pers.tguserid, `You've got 10. Spend it up to: ${tr.json.spendupto?.toLocaleString()}`);
+                        bot.sendMessage(pers.tguserid, `Вы получили 10 на счет. Потратьте до: ${tr.json.spendupto?.toLocaleString()}`);
                     }
                     return true;
                 }
