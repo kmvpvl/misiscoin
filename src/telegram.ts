@@ -184,8 +184,8 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                         spendupto = Math.min(balance_v, spendupto);
                         if (spendupto < 0) spendupto = 0;
                         
-                        if (spendupto < count) {
-                            bot.sendMessage(chat_id, `Недостаточно бобов для выполнения операции. Лимит ${spendupto}`);
+                        if (balance_v < count) {
+                            bot.sendMessage(chat_id, `Недостаточно бобов для выполнения операции. Лимит ${balance_v}`);
                             return true;
                         }
                     }
