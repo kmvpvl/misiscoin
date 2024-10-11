@@ -275,9 +275,16 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                 }
             case "/broadcast":
                 if (person.json.emission === undefined || !person.json.emission) return true;
-                const all_persons = await mongoPersons.aggregate<IPerson>([{$match: {"blocked": false}}]);
+                let all_persons = await mongoPersons.aggregate<IPerson>([{$match: {"blocked": false}}]);
                 all_persons.forEach((p, i)=> {
                     setTimeout(()=>bot.sendMessage(p.tguserid, msg_arr[1]), i * 2000);
+                });
+                return true;
+            case "/broadcastv":
+                if (person.json.emission === undefined || !person.json.emission) return true;
+                all_persons = await mongoPersons.aggregate<IPerson>([{$match: {"blocked": false}}]);
+                all_persons.forEach((p, i)=> {
+                    setTimeout(()=>bot.sendVideo(p.tguserid, msg_arr[1]), i * 2000);
                 });
                 return true;
             default: 
