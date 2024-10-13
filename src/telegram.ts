@@ -57,7 +57,12 @@ async function message_process(tgData: TelegramBot.Update, bot: TelegramBot, per
     if (!await command_process(tgData, bot, person)) {
         const chat_id = tgData.message?.chat.id as number;
         const command_d = person.json.awaitcommanddata?.split(":", 2);
-        if (command_d === undefined) return true; 
+        if (command_d === undefined) {
+            if (tgData.message?.video !== undefined) {
+                bot.sendMessage(chat_id, `Ваш контент принят. File_id = '${tgData.message?.video.file_id}'. Отправиьте идентификатор тому, кто имеет право делать рассылки`);
+            }
+            return true;
+        } 
         switch (command_d[0]) {
             case "ProductLongName":
                 bot.sendMessage(chat_id, "Теперь введите короткий идентификатор продукта");
@@ -100,6 +105,7 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
     const chat_id = tgData.message?.chat.id as number;
     const commands = tgData.message?.entities?.filter(v => v.type == "bot_command");
     if (!commands || !(commands as any).length ) return false;
+    if (person.json.awaitcommanddata !== undefined) await person.setAwaitCommandData();
     console.log(`command(s) found: ${tgData.message?.text}`);
     for (let [i, c] of Object.entries(commands as Array<TelegramBot.MessageEntity>)) {
         const command_name = tgData.message?.text?.substring(c.offset, c.offset + c.length);
@@ -277,7 +283,20 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                 if (person.json.emission === undefined || !person.json.emission) return true;
                 const all_persons = await mongoPersons.aggregate<IPerson>([{$match: {"blocked": false}}]);
                 all_persons.forEach((p, i)=> {
-                    setTimeout(()=>bot.sendMessage(p.tguserid, msg_arr[1]), i * 2000);
+                    setTimeout(async ()=>{
+                        try {
+                            switch (msg_arr[2]){
+                                case "v":
+                                    await bot.sendVideo(p.tguserid, msg_arr[1]);
+                                    break;
+                                default: 
+                                    await bot.sendMessage(p.tguserid, msg_arr[1]);
+                            }
+                            console.log(`Message to tgid = '${p.tguserid}' sent`);
+                        } catch(e: any) {
+                            console.error(`Message to tgid = '${p.tguserid}' wasn't sent`);
+                        }
+                    }, i * 2000);
                 });
                 return true;
             default: 
