@@ -1,6 +1,7 @@
 import { model, Schema, Types } from "mongoose";
 import MongoProto from "./mongoproto";
 import { Balance, mongoTransactions } from "./transaction";
+import { IPerson, mongoPersons } from "./person";
 
 export interface IProduct {
     _id?: Types.ObjectId;
@@ -22,6 +23,14 @@ export const ProductSchema = new Schema({
     changed: {type: Date, require: false},
     history: {type: Array, require: false},
 })
+
+interface Depositor extends IPerson {
+    contributions: Array<{
+        validthru?: Date;
+        sum: number;
+    }>
+}
+
 
 export const mongoProducts = model<IProduct>('products', ProductSchema)
 
@@ -74,4 +83,24 @@ export default class Product extends MongoProto<IProduct> {
         return ret.filter(v=>v.sum !== 0);
     }
 
+    async contributors(): Promise<Array<Depositor>> {
+        const depositors = await mongoPersons.aggregate([
+            {$lookup:{
+                from: "transactions",
+                localField: "_id",
+                foreignField: "from",
+                pipeline: [
+                    {$match:{to: this.uid}},
+                    {$group:{_id: {from: "$from", validthru: "$validthru"},sum: {$sum: "$count"}}},
+                    {$addFields: {from: "$_id.from",validthru: "$_id.validthru"}}
+                  ],
+                  as: "contributions"
+                }
+            },{$match:{$expr: {$ne: ["$contributions", []]}}},
+            {$addFields:{sum: {$sum: "$contributions.sum"}}},
+            {$sort:{sum: -1}},
+            {$project:{"contributions.from": 0,"contributions._id": 0}}
+        ]);
+        return depositors;
+    }
 }

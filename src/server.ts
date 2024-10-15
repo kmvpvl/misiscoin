@@ -9,6 +9,7 @@ import path from 'path';
 import { createHmac, randomUUID } from 'crypto';
 import Person from './person';
 import telegram from './telegram';
+import Product from './product';
 
 export default function checkSettings(){
     const dotenv = require('dotenv');
@@ -104,7 +105,7 @@ checkSettings();
 const PORT = process.env.PORT || 8000;
 
 async function notFound(c: any, req: Request, res: Response){
-    const p = path.join(__dirname, '..', 'public', req.originalUrl);
+    const p = path.join(__dirname, '..', 'public', req.path);
     if (fs.existsSync(p)) {
         return res.sendFile(p);
     }
@@ -132,12 +133,24 @@ api.register({
     },
     //supportsendmessagetouser: async (c, req, res, user) => supportsendmessagetouser(c, req, res, user, bot),
     telegram: async (c, req, res, user) => telegram(c, req, res, bot),
+    productbalance: async (c, req, res, person) => productbalance(c, req, res, person, bot),
 
     validationFail: (c, req, res) => res.status(400).json({ err: c.validation.errors }),
     notFound: (c, req, res) => notFound(c, req, res),
     notImplemented: (c, req, res) => res.status(500).json({ err: 'not implemented' }),
     unauthorizedHandler: (c, req, res) => res.status(401).json({ err: 'not auth' })
 });
+
+async function productbalance(c: Context, req: Request, res: Response, person: Person, bot: TelegramBot) {
+    const product_name = req.body.productname;
+    const product = await Product.getByName(product_name);
+    if (product !== undefined) {
+        return res.status(200).json({product: product.json, balance: await product.balance(), contributors: await product.contributors()});
+    } else {
+        return res.status(400).json({ok: false, error: `Product '${product_name}' not found`});
+    }
+}
+
 api.registerSecurityHandler('MisisCoinTGUserId',  async (context, req, res, person: Person)=>{
     return person !== undefined;
 });

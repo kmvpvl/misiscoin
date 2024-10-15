@@ -117,14 +117,14 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                 return true;
             case '/balance':
                 const products = await person.getProducts();
-                let str = [];
+                let menu = [];
                 for (const p of products) {
                     const prodObj = new Product(undefined, p);
                     const balance = await prodObj.balance();
                     const bal_str = balance.reduce((prev, cur)=>prev+cur.sum, 0);
-                    str.push( `${p.name}: ${p.desc} = ${bal_str}`);
+                    menu.push( [{text: `${p.name}: ${p.desc} = ${bal_str}`, web_app: {url: `${process.env.tg_web_hook_server}/product.html?name=${encodeURIComponent(p.name)}`}}]);
                 }
-                bot.sendMessage(chat_id, `Ваши продукты:\n${str.join("\n")}`);
+                bot.sendMessage(chat_id, `Ваши продукты:`, {reply_markup:{inline_keyboard:menu}});
 
                 const own = await person.balance();
 
@@ -135,7 +135,7 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                     +prev}, 0);
                 spendupto = Math.min(balance_v, spendupto);
                 if (spendupto < 0) spendupto = 0;
-                bot.sendMessage(chat_id, `Ваш личный счет:\n$${balance_c} - постоянные\n$${balance_v} - временные 01.01.25\n$${spendupto} - доступные`.substring(0, 399));
+                bot.sendMessage(chat_id, `Ваш личный счет:\n$${balance_c} - постоянные\n$${balance_v} - временные 01.01.25`.substring(0, 399));
                 return true;
             case '/settings':
                 if (person.json.group !== undefined) {
