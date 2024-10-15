@@ -145,7 +145,7 @@ async function productbalance(c: Context, req: Request, res: Response, person: P
     const product_name = req.body.productname;
     const product = await Product.getByName(product_name);
     if (product !== undefined) {
-        return res.status(200).json({product: product.json, balance: await product.balance()});
+        return res.status(200).json({product: product.json, balance: await product.balance(), contributors: await product.contributors()});
     } else {
         return res.status(400).json({ok: false, error: `Product '${product_name}' not found`});
     }

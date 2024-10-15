@@ -13,7 +13,11 @@
         fetchCommand("productbalance", {productname: params.get("name")}, res=>{
             const balance = res.balance;
             const product = res.product;
+            const contributors = res.contributors;
+
             $('#product').text(`${product.name}: ${product.desc}`);
+            $('#balance').text(`${balance.reduce((prev, el)=>prev+el.sum, 0)}`);
+            $('#contributors').html(`${contributors.map((el, i)=>`${el.tguserid}: ${el.sum}`).join("<br>")}`);
         }, err=>{
             debugger
         });
@@ -21,9 +25,12 @@
 </script>
 </head>
 <body>
-    <img src="logo.png" style="width: 20%;">
     <div id="version"></div>
+    <h1>Продукт</h1>
     <div id="product"></div>
+    <h1>Баланс</h1>
     <div id="balance"></div>
+    <h1>Контрибуторы</h1>
+    <div id="contributors"></div>
 </body>
 </html>
