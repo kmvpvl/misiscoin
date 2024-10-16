@@ -116,26 +116,35 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                 bot.sendMessage(chat_id, `Привет, студент! Этот бот создан с целью вложения или получения бобов. Искренне верим, что вам удастся воспользоваться им правильно и получить заветную оценку. Удачи!\nВаш Telegram ID '${chat_id}'. Используйте его для получения бобов`);
                 return true;
             case '/balance':
-                const products = await person.getProducts();
-                let menu = [];
-                for (const p of products) {
-                    const prodObj = new Product(undefined, p);
-                    const balance = await prodObj.balance();
-                    const bal_str = balance.reduce((prev, cur)=>prev+cur.sum, 0);
-                    menu.push( [{text: `${p.name}: ${p.desc} = ${bal_str}`, web_app: {url: `${process.env.tg_web_hook_server}/product.html?name=${encodeURIComponent(p.name)}`}}]);
+                if (msg_arr.length === 1) {
+                    const products = await person.getProducts();
+                    let menu = [];
+                    for (const p of products) {
+                        const prodObj = new Product(undefined, p);
+                        const balance = await prodObj.balance();
+                        const bal_str = balance.reduce((prev, cur)=>prev+cur.sum, 0);
+                        menu.push( [{text: `${p.name}: ${p.desc} = ${bal_str}`, web_app: {url: `${process.env.tg_web_hook_server}/product.html?name=${encodeURIComponent(p.name)}`}}]);
+                    }
+                    bot.sendMessage(chat_id, `Ваши продукты:`, {reply_markup:{inline_keyboard:menu}});
+
+                    const own = await person.balance();
+
+                    const balance_c = own.reduce<number>((prev, cur)=>(cur.validthru===undefined?cur.sum:0)+prev, 0);
+                    const balance_v = own.reduce<number>((prev, cur)=>(cur.validthru!==undefined?cur.sum:0)+prev, 0);
+                    let spendupto = own.reduce<number>((prev, cur)=>{
+                        return (cur.validthru!==undefined && cur.spendupto===undefined || cur.spendupto!==undefined && cur.spendupto > new Date()?cur.sum:0)
+                        +prev}, 0);
+                    spendupto = Math.min(balance_v, spendupto);
+                    if (spendupto < 0) spendupto = 0;
+                    bot.sendMessage(chat_id, `Ваш личный счет:\n$${balance_c} - постоянные\n$${balance_v} - временные 01.01.25`.substring(0, 399));
+                } else {
+                    const prod = await Product.getByName(msg_arr[1]);
+                    if (prod !== undefined) {
+                        bot.sendMessage(chat_id, "Продукт:", {reply_markup: {inline_keyboard: [[{text: `${prod.json.name}: ${prod.json.desc}`, web_app: {url: `${process.env.tg_web_hook_server}/product.html?name=${encodeURIComponent(prod.json.name)}`}}]]}});
+                    } else {
+                        bot.sendMessage(chat_id, `Продукт '${msg_arr[1]}' не найден`);
+                    }
                 }
-                bot.sendMessage(chat_id, `Ваши продукты:`, {reply_markup:{inline_keyboard:menu}});
-
-                const own = await person.balance();
-
-                const balance_c = own.reduce<number>((prev, cur)=>(cur.validthru===undefined?cur.sum:0)+prev, 0);
-                const balance_v = own.reduce<number>((prev, cur)=>(cur.validthru!==undefined?cur.sum:0)+prev, 0);
-                let spendupto = own.reduce<number>((prev, cur)=>{
-                    return (cur.validthru!==undefined && cur.spendupto===undefined || cur.spendupto!==undefined && cur.spendupto > new Date()?cur.sum:0)
-                    +prev}, 0);
-                spendupto = Math.min(balance_v, spendupto);
-                if (spendupto < 0) spendupto = 0;
-                bot.sendMessage(chat_id, `Ваш личный счет:\n$${balance_c} - постоянные\n$${balance_v} - временные 01.01.25`.substring(0, 399));
                 return true;
             case '/settings':
                 if (person.json.group !== undefined) {
