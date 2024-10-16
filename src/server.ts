@@ -134,6 +134,7 @@ api.register({
     //supportsendmessagetouser: async (c, req, res, user) => supportsendmessagetouser(c, req, res, user, bot),
     telegram: async (c, req, res, user) => telegram(c, req, res, bot),
     productbalance: async (c, req, res, person) => productbalance(c, req, res, person, bot),
+    contributions: async (c, req, res, person) => contributions(c, req, res, person, bot),
 
     validationFail: (c, req, res) => res.status(400).json({ err: c.validation.errors }),
     notFound: (c, req, res) => notFound(c, req, res),
@@ -148,6 +149,14 @@ async function productbalance(c: Context, req: Request, res: Response, person: P
         return res.status(200).json({product: product.json, balance: await product.balance(), contributors: await product.contributors()});
     } else {
         return res.status(400).json({ok: false, error: `Product '${product_name}' not found`});
+    }
+}
+
+async function contributions(c: Context, req: Request, res: Response, person: Person, bot: TelegramBot) {
+    try {
+        return res.status(200).json({person: person.json, contributions: await person.contributions()});
+    } catch(e: any) {
+        return res.status(400).json({ok: false, error: `${JSON.stringify(e)}`});
     }
 }
 
