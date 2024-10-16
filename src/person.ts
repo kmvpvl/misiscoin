@@ -107,4 +107,23 @@ export default class Person extends MongoProto<IPerson> {
         ]);
         return tr;
     }
+    async contributions(): Promise<Array<IProduct>> {
+        const c = await mongoTransactions.aggregate([
+            {$match: {from: this.uid}},
+            {$group: {_id: {to: "$to"},sum: {$sum: "$count"}}},
+            {$addFields: {"to": "$_id.to"}},
+            {$lookup: {
+              from: "products",
+              localField: "to",
+              foreignField: "_id",
+              as: "prods"
+            }},
+            {$match: {$expr:{$ne: ["$prods", []]}}},
+            {$sort: {sum: -1}},
+            {$unwind: {path: "$prods",preserveNullAndEmptyArrays: false}},
+            {$addFields: {"prods.sum": "$sum"}},
+            {$replaceRoot: {newRoot: "$prods"}}
+          ]);
+          return c;
+    }
 }

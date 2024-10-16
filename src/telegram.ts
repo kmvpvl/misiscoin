@@ -136,7 +136,9 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                         +prev}, 0);
                     spendupto = Math.min(balance_v, spendupto);
                     if (spendupto < 0) spendupto = 0;
-                    bot.sendMessage(chat_id, `Ваш личный счет:\n$${balance_c} - постоянные\n$${balance_v} - временные 01.01.25`.substring(0, 399));
+                    bot.sendMessage(chat_id, `Ваш личный счет:\n$${balance_c} - постоянные\n$${balance_v} - временные 01.01.25`.substring(0, 399), {reply_markup: {inline_keyboard: [[
+                        {text: "Мои контрибуции", web_app:{url:`${process.env.tg_web_hook_server}/person.html`}}
+                    ]]}});
                 } else {
                     const prod = await Product.getByName(msg_arr[1]);
                     if (prod !== undefined) {
