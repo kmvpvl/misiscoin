@@ -135,6 +135,7 @@ api.register({
     telegram: async (c, req, res, user) => telegram(c, req, res, bot),
     productbalance: async (c, req, res, person) => productbalance(c, req, res, person, bot),
     contributions: async (c, req, res, person) => contributions(c, req, res, person, bot),
+    sendtextmessage: async (c, req, res, person) => sendtextmessage(c, req, res, person, bot),
 
     validationFail: (c, req, res) => res.status(400).json({ err: c.validation.errors }),
     notFound: (c, req, res) => notFound(c, req, res),
@@ -155,6 +156,19 @@ async function productbalance(c: Context, req: Request, res: Response, person: P
 async function contributions(c: Context, req: Request, res: Response, person: Person, bot: TelegramBot) {
     try {
         return res.status(200).json({person: person.json, contributions: await person.contributions()});
+    } catch(e: any) {
+        return res.status(400).json({ok: false, error: `${JSON.stringify(e)}`});
+    }
+}
+
+async function sendtextmessage(c: Context, req: Request, res: Response, person: Person, bot: TelegramBot) {
+    try {
+        const whom = req.body.whom;
+        const text = req.body.text;
+        if (whom !== undefined && text !== undefined){
+            bot.sendMessage(whom, `Вам сообщение от ${person.json.name}(${person.json.tguserid}): ${text}`.substring(0, 399), {disable_notification: true});
+        }
+        return res.status(200).json({ok: true});
     } catch(e: any) {
         return res.status(400).json({ok: false, error: `${JSON.stringify(e)}`});
     }
