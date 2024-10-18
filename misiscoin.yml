@@ -49,6 +49,12 @@ paths:
       responses:
         '200':
           description: OK
+  /sendtextmessage:
+    post:
+      operationId: sendtextmessage
+      responses:
+        '200':
+          description: OK
 security:
   - MisisCoinTGUserId: []
     TGQueryCheckString: []

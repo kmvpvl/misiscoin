@@ -10,6 +10,14 @@
     Telegram.WebApp.expand();
     const params = new URLSearchParams(document.location.search);
     $(document).ready(()=> {
+        $('#message').hide();
+        $('#btnSend').click(event=>{
+            fetchCommand("sendtextmessage", {whom: $('#message_whom').text(), text: $('#message_text').val()}, res=>{
+                $('#message').hide();
+            }, err=>{
+                alert("Ошибка отправки сообщения");
+            });
+        });
         fetchCommand("productbalance", {productname: params.get("name")}, res=>{
             const balance = res.balance;
             const product = res.product;
@@ -17,7 +25,11 @@
 
             $('#product').text(`${product.name}: ${product.desc}`);
             $('#balance').text(`${balance.reduce((prev, el)=>prev+el.sum, 0)}`);
-            $('#contributors').html(`${contributors.map((el, i)=>`${el.tguserid}: ${el.sum}`).join("<br>")}`);
+            $('#contributors').html(`${contributors.map((el, i)=>`${el.tguserid} <envelope tguserid="${el.tguserid}">✉️</envelope>: ${el.sum}`).join("<br>")}`);
+            $('envelope').click(event=> {
+                $('#message_whom').text(event.currentTarget.attributes["tguserid"].value);
+                $('#message').show();
+            });
         }, err=>{
             debugger
         });
@@ -32,5 +44,9 @@
     <div id="balance"></div>
     <h1>Контрибуторы</h1>
     <div id="contributors"></div>
+    <div id="message">
+        <div>Кому: <span id="message_whom"></span></div>
+        <input placeholder="Сообщение..." id="message_text" maxlength="50"><button id="btnSend">Send</button>
+    </div>
 </body>
 </html>
