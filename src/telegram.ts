@@ -291,7 +291,7 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                     return true;
                 }
             case "/message":
-                const msg = msg_arr.filter((m, i)=>i > 2).join(" ");
+                const msg = msg_arr.filter((m, i)=>i > 1).join(" ");
                 bot.sendMessage(msg_arr[1], `Message from '${person.json.name} (${person.json.tguserid})': ${msg}`, {disable_notification: true});
                 return true;
             case "/broadcast":
