@@ -233,8 +233,8 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                             validthru: what==="c"?undefined:new Date("2024-12-31T21:00:00.000+00:00")
                         });
                         await tr.save();
-                        bot.sendMessage(chat_id, `You've paid ${count} to person '${whomPerson.json.name}' successfully`);
-                        bot.sendMessage(whomPerson.json.tguserid, `You've gotten payment from '${person.json.name}' ${count}`);
+                        bot.sendMessage(chat_id, `Вы заплатили ${count} '${whomPerson.json.name}' успешно`);
+                        bot.sendMessage(whomPerson.json.tguserid, `Вы получили платеж от '${person.json.name}'(${person.json.tguserid}) ${count} (${what})`);
                         return true;
                     }
                     if (whomProduct === undefined && whomPerson === undefined) {
@@ -290,6 +290,10 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                     }
                     return true;
                 }
+            case "/message":
+                const msg = msg_arr.filter((m, i)=>i > 2).join(" ");
+                bot.sendMessage(msg_arr[1], `Message from '${person.json.name} (${person.json.tguserid})': ${msg}`, {disable_notification: true});
+                return true;
             case "/broadcast":
                 if (person.json.emission === undefined || !person.json.emission) return true;
                 const all_persons = await mongoPersons.aggregate<IPerson>([{$match: {"blocked": false}}]);
