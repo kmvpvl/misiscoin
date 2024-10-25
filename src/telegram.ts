@@ -59,7 +59,10 @@ async function message_process(tgData: TelegramBot.Update, bot: TelegramBot, per
         const command_d = person.json.awaitcommanddata?.split(":", 2);
         if (command_d === undefined) {
             if (tgData.message?.video !== undefined) {
-                bot.sendMessage(chat_id, `Ваш контент принят. File_id = '${tgData.message?.video.file_id}'. Отправиьте идентификатор тому, кто имеет право делать рассылки`);
+                bot.sendMessage(chat_id, `Ваш видео контент принят. File_id = '${tgData.message?.video.file_id}'. Отправиьте идентификатор тому, кто имеет право делать рассылки`);
+            }
+            if (tgData.message?.document !== undefined) {
+                bot.sendMessage(chat_id, `Ваш документ принят. File_id = '${tgData.message?.document.file_id}'. Отправиьте идентификатор тому, кто имеет право делать рассылки`);
             }
             return true;
         } 
@@ -300,12 +303,17 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                 all_persons.forEach((p, i)=> {
                     setTimeout(async ()=>{
                         try {
+                            let caption = msg_arr.filter((m, i)=>i > 2).join(" ");
                             switch (msg_arr[2]){
                                 case "v":
-                                    await bot.sendVideo(p.tguserid, msg_arr[1]);
+                                    await bot.sendVideo(p.tguserid, msg_arr[1], {caption: caption});
+                                    break;
+                                case "d":
+                                    await bot.sendDocument(p.tguserid, msg_arr[1], {caption: caption});
                                     break;
                                 default: 
-                                    await bot.sendMessage(p.tguserid, msg_arr[1]);
+                                    caption = msg_arr.filter((m, i)=>i > 0).join(" ");
+                                    await bot.sendMessage(p.tguserid, caption);
                             }
                             console.log(`Message to tgid = '${p.tguserid}' sent`);
                         } catch(e: any) {
