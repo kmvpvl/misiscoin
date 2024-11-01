@@ -1,3 +1,11 @@
 envelope {
     cursor: pointer;
 }
+html, body {
+    color: var(--tg-theme-text-color);
+    background-color: var(--tg-theme-bg-color);
+}
+
+.blocked-user {
+    color: red;
+}

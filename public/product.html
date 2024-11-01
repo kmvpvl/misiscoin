@@ -25,7 +25,7 @@
 
             $('#product').text(`${product.name}: ${product.desc}`);
             $('#balance').text(`${balance.reduce((prev, el)=>prev+el.sum, 0)}`);
-            $('#contributors').html(`${contributors.map((el, i)=>`${el.tguserid} <envelope tguserid="${el.tguserid}">✉️</envelope>: ${el.sum}`).join("<br>")}`);
+            $('#contributors').html(`${contributors.map((el, i)=>`<span class="${el.blocked?"blocked-user":""}">${el.tguserid}${el.blocked?` - блокирован`:""}</span> <envelope tguserid="${el.tguserid}">✉️</envelope>: ${el.sum}`).join("<br>")}`);
             $('envelope').click(event=> {
                 $('#message_whom').text(event.currentTarget.attributes["tguserid"].value);
                 $('#message').show();

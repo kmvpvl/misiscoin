@@ -128,7 +128,7 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                         const bal_str = balance.reduce((prev, cur)=>prev+cur.sum, 0);
                         menu.push( [{text: `${p.name}: ${p.desc} = ${bal_str}`, web_app: {url: `${process.env.tg_web_hook_server}/product.html?name=${encodeURIComponent(p.name)}`}}]);
                     }
-                    bot.sendMessage(chat_id, `Ваши продукты:`, {reply_markup:{inline_keyboard:menu}});
+                    if (menu.length > 0) bot.sendMessage(chat_id, `Ваши продукты:`, {reply_markup:{inline_keyboard:menu}});
 
                     const own = await person.balance();
 
