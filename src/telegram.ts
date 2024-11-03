@@ -261,7 +261,7 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                 if (op_str !== "") await bot.sendMessage(chat_id, op_str);
                 return true;
             case '/help':
-                const help = "/start - начать (получить Telegram ID) \n/balance - Мой текущий баланс\n/spend - позволяет вкладывать бобы в проекты или передавать их иным лицам\n/operations - отображает ваши последние 10 операций";
+                const help = " /balance - Мой текущий баланс\n/spend - позволяет вкладывать бобы в проекты или передавать их иным лицам\n/message - написать сообщение другому пользователю или владельцу продукта";
                 bot.sendMessage(chat_id, help);
                 return true;
             case '/newproduct':
@@ -295,7 +295,23 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                 }
             case "/message":
                 const msg = msg_arr.filter((m, i)=>i > 1).join(" ");
-                bot.sendMessage(msg_arr[1], `Message from '${person.json.name} (${person.json.tguserid})': ${msg}`, {disable_notification: true});
+                if (msg_arr.length < 3 ) {
+                    bot.sendMessage(chat_id, "Не получилось распознать имя получателя сообщения. /message <TgID или кратк имя продукта> <Сообщение>");
+                    return true;
+                }
+                const userTo = await Person.getByTgUserId(msg_arr[1]);
+                if (userTo !== undefined) {
+                    await bot.sendMessage(msg_arr[1], `Сообщение от '${person.json.name} (${person.json.tguserid})': ${msg}`, {disable_notification: true});
+                } else {
+                    const prodTo = await Product.getByName(msg_arr[1]);
+                    if (prodTo !== undefined) {
+                        const owner = new Person(prodTo.json.owner);
+                        await owner.load();
+                        bot.sendMessage(owner.json.tguserid, `Сообщение от '${person.json.name} (${person.json.tguserid})': ${msg}`, {disable_notification: true});
+                    } else {
+                        bot.sendMessage(chat_id, "Не получилось распознать имя получателя сообщения. /message <TgID или кратк имя продукта> <Сообщение>");
+                    }
+                }
                 return true;
             case "/broadcast":
                 if (person.json.emission === undefined || !person.json.emission) return true;
