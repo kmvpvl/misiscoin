@@ -57,6 +57,15 @@ async function message_process(tgData: TelegramBot.Update, bot: TelegramBot, per
     if (!await command_process(tgData, bot, person)) {
         const chat_id = tgData.message?.chat.id as number;
         const command_d = person.json.awaitcommanddata?.split(":", 2);
+        if (tgData.message?.reply_to_message !== undefined) {
+            if (/Сообщение от \'.+\([0-9]+\)\':.+/gm.test(""+tgData.message.reply_to_message.text)) {
+                const words_tgid = / \([0-9]+\)':/gm.exec(""+tgData.message.reply_to_message.text);
+                if (words_tgid !== null) {
+                    const whom_tgid = /[0-9]+/gm.exec(words_tgid[0]);
+                    if (whom_tgid !== null) bot.sendMessage(whom_tgid[0], `Сообщение от '${person.json.name} (${person.json.tguserid})': ${tgData.message.text}`, {disable_notification: true});
+                }
+            }
+        }
         if (command_d === undefined) {
             if (tgData.message?.video !== undefined) {
                 bot.sendMessage(chat_id, `Ваш видео контент принят. File_id = '${tgData.message?.video.file_id}'. Отправиьте идентификатор тому, кто имеет право делать рассылки`);
