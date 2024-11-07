@@ -166,7 +166,7 @@ async function sendtextmessage(c: Context, req: Request, res: Response, person: 
         const whom = req.body.whom;
         const text = req.body.text;
         if (whom !== undefined && text !== undefined){
-            bot.sendMessage(whom, `Вам сообщение от ${person.json.name}(${person.json.tguserid}): ${text}`.substring(0, 399), {disable_notification: true});
+            bot.sendMessage(whom, `Сообщение от ${person.json.name}(${person.json.tguserid}): ${text}`.substring(0, 399), {disable_notification: true});
         }
         return res.status(200).json({ok: true});
     } catch(e: any) {
