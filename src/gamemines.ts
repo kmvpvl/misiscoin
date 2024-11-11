@@ -56,6 +56,7 @@ export default class GameMinesField extends MongoProto<IGameMinesField> {
         if (whereto != 42){
             this.json.whowhere[whereto].push(who);
             this.json.cellexploded[whereto] = this.json.whowhere[whereto].length > this.json.cellmaxweight[whereto];
+            this.json.cellmaxweight[whereto]--;
         } else {
             this.json.finishersCount++;
         }

@@ -185,8 +185,8 @@ async function gameminesmakefield(c: Context, req: Request, res: Response, perso
     if (field === undefined) {
         const weights = new Array(42).fill(0).map(el=>{
             let x = Math.round(Math.random()*5);
-            x = x - 2;
-            x = x < 0?0:x;
+            //x = x - 2;
+            //x = x < 0?0:x;
             return x;
         });
         //for (const el in weights) weights[el] = Math.round(Math.random()*7);
