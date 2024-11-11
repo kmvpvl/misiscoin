@@ -55,6 +55,18 @@ paths:
       responses:
         '200':
           description: OK
+  /gameminesmakefield:
+    post:
+      operationId: gameminesmakefield
+      responses:
+        '200':
+          description: OK
+  /gameminesgo:
+    post:
+      operationId: gameminesgo
+      responses:
+        '200':
+          description: OK
 security:
   - MisisCoinTGUserId: []
     TGQueryCheckString: []

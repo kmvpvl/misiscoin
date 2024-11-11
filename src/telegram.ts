@@ -347,6 +347,13 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                     }, i * 2000);
                 });
                 return true;
+            case "/game":
+                bot.sendMessage(chat_id, "Выберите игру", {
+                    reply_markup:{inline_keyboard:[
+                        person.json.emission?[{text: "Минное поле (Админ)", web_app: {url: `${process.env.tg_web_hook_server}/game_mines.html?admin=1`}}]:
+                        [{text: "Минное поле", web_app: {url: `${process.env.tg_web_hook_server}/game_mines.html`}}]
+                    ]}});
+                return true;
             default: 
                 bot.sendMessage(chat_id, `'${command_name}' is unknoun command. Check your spelling`);
                 return true;

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="stylesheet" href="misiscoin.css"/>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="fetch.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+<script>
+    var gamemap;
+    var tguserid = window.Telegram.WebApp.initDataUnsafe.user.id;
+
+    function drawField() {
+        $('span').text(gamemap.group);
+        gamemap.cellmaxweight.forEach((el, idx)=> {
+            if (params.get("admin")) $(`cell[tag="${idx}"]`).text(el);
+            if (!params.get("admin")) $(`cell[tag="${idx}"]`).text(gamemap.whowhere[idx].length?gamemap.whowhere[idx].length:"");
+            if (gamemap.cellexploded[idx]) $(`cell[tag="${idx}"]`).addClass("exploded");
+            else $(`cell[tag="${idx}"]`).removeClass("exploded");
+            if (gamemap.whowhere[idx].filter(el=>el == tguserid).length === 1) $(`cell[tag="${idx}"]`).text("Я");
+            $('total').text(`Счет игры: ходов ${gamemap.stepCount}; дошли до конца ${gamemap.finishersCount}`);
+        })
+    }
+
+    Telegram.WebApp.expand();
+    const params = new URLSearchParams(document.location.search);
+    function updateField() {
+        fetchCommand("gameminesmakefield", params.get("admin")?{group: $('select').val()}:undefined, res=>{
+            gamemap = res;
+            drawField();
+        }
+        , err=>{
+        debugger
+        });
+    }
+    $(document).ready(()=> {
+        for (let i = 41; i >=0; i--) $('field').append($(`<cell tag="${i}"/>`))
+        setInterval(updateField, 3000);
+        if (params.get("admin")) {
+            $('h1').append($('<select><option>БЭК-24-1</option><option>БЭК-24-2</option><option>БЭК-24-3</option><option>БЭК-24-4</option><option>БЭК-24-5</option><option>БЭК-24-5</option><option>БЭК-24-7</option><option>БТД-24-1</option></select>'));
+            $('select').change(()=>updateField())
+        }
+
+        updateField();
+        
+        $('[tag]').on('click', event=>{
+            const cellNumber = event.currentTarget.getAttribute('tag');
+            //alert(cellNumber);
+            const whereAmI = gamemap.whowhere.findIndex(el=>el.filter(e=>e == tguserid).length===1);
+            
+            //alert(whereAmI);
+            if (whereAmI === -1) {
+
+            } else {
+
+            }
+            fetchCommand("gameminesgo", {whereto: cellNumber}, res=> {
+                gamemap = res.field;
+                drawField();
+                if (!res.ok) alert("Неправильный ход");
+            }, err=> {
+                debugger
+            });
+        })
+    })
+</script>
+<style>
+    * {
+        box-sizing: border-box;
+        --border: 1px solid black;
+        --padding: 1px;
+    }
+    body, html {
+        font-family: "UbuntuMono", monospace;
+        min-height: 100%;
+        max-height: 100%;
+        min-width: 100%;
+        max-width: 100%;
+        overflow: hidden;
+        width: 100%;
+        height:100%;
+        margin: 0;
+        color: var(--tg-theme-text-color);
+        background-color: var(--tg-theme-bg-color);
+        padding: 5px;
+    }
+    content {
+        min-height: 100%;
+        max-height: 100%;
+        min-width: 100%;
+        max-width: 100%;
+        overflow:hidden;
+        width: 100%;
+        height:100%;
+        display: grid;
+        grid-template-rows: auto auto auto 1fr auto; /* 1fr auto;*/
+    }
+    field {
+        display: grid;
+        min-width: 100%;
+        max-width: 100%;
+        min-height: 100%;
+        max-height: 100%;
+        overflow: hidden;
+        gap: 5%;
+        width: 100%;
+        height: 100%;
+        grid-template-columns: repeat(6, auto);
+        grid-template-rows: repeat(7, auto);
+    }
+
+    cell {
+        border: 1px solid var(--tg-theme-text-color);
+        width: 3em;
+        height: 3em;
+        cursor: pointer;
+        text-align: center;
+        padding-top: 25%;
+    }
+    cell.exploded {
+        background-color: brown;
+    }
+    h2 {
+        text-align: center;
+    }
+</style>
+</head>
+<body>
+    <content>
+    <h1>Минное поле <span></span></h1>
+    <total></total>
+    <h2 tag="42">Finish</h2>
+    <field>
+    </field>
+    <h2>Start</h2>
+    </content> 
+</body>
+</html>

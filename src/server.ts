@@ -10,6 +10,7 @@ import { createHmac, randomUUID } from 'crypto';
 import Person from './person';
 import telegram from './telegram';
 import Product from './product';
+import GameMinesField from './gamemines';
 
 export default function checkSettings(){
     const dotenv = require('dotenv');
@@ -136,6 +137,8 @@ api.register({
     productbalance: async (c, req, res, person) => productbalance(c, req, res, person, bot),
     contributions: async (c, req, res, person) => contributions(c, req, res, person, bot),
     sendtextmessage: async (c, req, res, person) => sendtextmessage(c, req, res, person, bot),
+    gameminesmakefield: async (c, req, res, person) => gameminesmakefield(c, req, res, person, bot),
+    gameminesgo: async (c, req, res, person) => gameminesgo(c, req, res, person, bot),
 
     validationFail: (c, req, res) => res.status(400).json({ err: c.validation.errors }),
     notFound: (c, req, res) => notFound(c, req, res),
@@ -171,6 +174,50 @@ async function sendtextmessage(c: Context, req: Request, res: Response, person: 
         return res.status(200).json({ok: true});
     } catch(e: any) {
         return res.status(400).json({ok: false, error: `${JSON.stringify(e)}`});
+    }
+}
+
+async function gameminesmakefield(c: Context, req: Request, res: Response, person: Person, bot: TelegramBot) {
+    let group = person.json.group?person.json.group:"";
+    const group_admin = req.body.group;
+    group = group_admin === undefined? group: group_admin;
+    let field = await GameMinesField.getByGroup(group);
+    if (field === undefined) {
+        const weights = new Array(42).fill(0).map(el=>{
+            let x = Math.round(Math.random()*5);
+            //x = x - 2;
+            //x = x < 0?0:x;
+            return x;
+        });
+        //for (const el in weights) weights[el] = Math.round(Math.random()*7);
+        field = new GameMinesField(undefined, {
+            group: group,
+            whowhere: Array(42).fill([]),
+            cellexploded: Array(42).fill(false),
+            cellmaxweight: weights,
+            stepCount: 0,
+            finishersCount:0,
+            blocked: false,
+            created: new Date()
+        });
+        //field.json.cellmaxweight.forEach((el, idx, arr)=>arr[idx] = Math.round(Math.random()*7))
+        await field.save();
+    }
+    return res.status(200).json(field.json);
+}
+
+async function gameminesgo(c: Context, req: Request, res: Response, person: Person, bot: TelegramBot) {
+    const group = person.json.group?person.json.group:"";
+    let field = await GameMinesField.getByGroup(group);
+    if (field === undefined) {
+        return res.status(404).json();
+    }
+    const whereto = req.body.whereto;
+    const right = await field.Goto(person.json.tguserid, whereto);
+    if (right) {
+        return res.status(200).json({field: field.json, ok: true});
+    } else {
+        return res.status(203).json({field: field.json, ok: false});
     }
 }
 
