@@ -79,6 +79,12 @@ paths:
       responses:
         '200':
           description: OK
+  /gametapgo:
+    post:
+      operationId: gametapgo
+      responses:
+        '200':
+          description: OK
 security:
   - MisisCoinTGUserId: []
     TGQueryCheckString: []

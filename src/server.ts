@@ -12,6 +12,7 @@ import telegram from './telegram';
 import Product from './product';
 import GameMinesField from './gamemines';
 import GamePsw from './gamepsw';
+import GameTap from './gametap';
 
 export default function checkSettings(){
     const dotenv = require('dotenv');
@@ -142,6 +143,7 @@ api.register({
     gameminesgo: async (c, req, res, person) => gameminesgo(c, req, res, person, bot),
     gamepswinit: async (c, req, res, person) => gamepswinit(c, req, res, person, bot),
     gamepswgo: async (c, req, res, person) => gamepswgo(c, req, res, person, bot),
+    gametapgo: async (c, req, res, person) => gametapgo(c, req, res, person, bot),
 
     validationFail: (c, req, res) => res.status(400).json({ err: c.validation.errors }),
     notFound: (c, req, res) => notFound(c, req, res),
@@ -252,6 +254,17 @@ async function gamepswgo(c: Context, req: Request, res: Response, person: Person
     } else {
         await gamer.ruleNumberPassed(ruleNumber, psw);
         return res.status(200).json({gamer: gamer.json, group: await GamePsw.groupScore(group), ok: true});
+    }
+}
+
+async function gametapgo(c: Context, req: Request, res: Response, person: Person, bot: TelegramBot) {
+    const inc = req.body.score;
+    let gamer = await GameTap.getById(person.json.tguserid);
+    if (gamer === undefined) {
+        return res.status(404).json({ok: false});
+    } else {
+        const curScore = await gamer.incScore(inc);
+        return res.status(200).json({gamer: gamer.json, ok: true});
     }
 }
 
