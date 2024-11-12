@@ -37,7 +37,7 @@
         for (let i = 41; i >=0; i--) $('field').append($(`<cell tag="${i}"/>`))
         setInterval(updateField, 3000);
         if (params.get("admin")) {
-            $('h1').append($('<select><option>БЭК-24-1</option><option>БЭК-24-2</option><option>БЭК-24-3</option><option>БЭК-24-4</option><option>БЭК-24-5</option><option>БЭК-24-5</option><option>БЭК-24-7</option><option>БТД-24-1</option></select>'));
+            $('h1').append($('<select><option>БЭК-24-1</option><option>БЭК-24-2</option><option>БЭК-24-3</option><option>БЭК-24-4</option><option>БЭК-24-5</option><option>БЭК-24-6</option><option>БЭК-24-7</option><option>БТД-24-1</option></select>'));
             $('select').change(()=>updateField())
         }
 
