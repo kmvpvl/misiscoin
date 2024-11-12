@@ -347,6 +347,14 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                     }, i * 2000);
                 });
                 return true;
+            case "/tap":
+                bot.sendMessage(chat_id, "Tap", {
+                    reply_markup:{inline_keyboard:
+                        [
+                        [{text: "Tap", web_app: {url: `${process.env.tg_web_hook_server}/tap.html`}}]
+                        ],
+                }});
+                return true;
             case "/game":
                 bot.sendMessage(chat_id, "Выберите игру", {
                     reply_markup:{inline_keyboard:
