@@ -67,6 +67,18 @@ paths:
       responses:
         '200':
           description: OK
+  /gamepswinit:
+    post:
+      operationId: gamepswinit
+      responses:
+        '200':
+          description: OK
+  /gamepswgo:
+    post:
+      operationId: gamepswgo
+      responses:
+        '200':
+          description: OK
 security:
   - MisisCoinTGUserId: []
     TGQueryCheckString: []

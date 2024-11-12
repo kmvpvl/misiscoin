@@ -11,6 +11,7 @@ import Person from './person';
 import telegram from './telegram';
 import Product from './product';
 import GameMinesField from './gamemines';
+import GamePsw from './gamepsw';
 
 export default function checkSettings(){
     const dotenv = require('dotenv');
@@ -139,6 +140,8 @@ api.register({
     sendtextmessage: async (c, req, res, person) => sendtextmessage(c, req, res, person, bot),
     gameminesmakefield: async (c, req, res, person) => gameminesmakefield(c, req, res, person, bot),
     gameminesgo: async (c, req, res, person) => gameminesgo(c, req, res, person, bot),
+    gamepswinit: async (c, req, res, person) => gamepswinit(c, req, res, person, bot),
+    gamepswgo: async (c, req, res, person) => gamepswgo(c, req, res, person, bot),
 
     validationFail: (c, req, res) => res.status(400).json({ err: c.validation.errors }),
     notFound: (c, req, res) => notFound(c, req, res),
@@ -218,6 +221,37 @@ async function gameminesgo(c: Context, req: Request, res: Response, person: Pers
         return res.status(200).json({field: field.json, ok: true});
     } else {
         return res.status(203).json({field: field.json, ok: false});
+    }
+}
+
+async function gamepswinit(c: Context, req: Request, res: Response, person: Person, bot: TelegramBot) {
+    const groupreq = req.body.group;
+    const group = person.json.group?person.json.group:groupreq;
+    let gamer = await GamePsw.getById(person.json.tguserid);
+    if (gamer === undefined) {
+        gamer = new GamePsw(undefined, {
+            tguserid: person.json.tguserid,
+            group: person.json.group,
+            blocked: false,
+            created: new Date(),
+            rulestime: []
+        });
+        await gamer.save();
+    }
+    return res.status(200).json({gamer: gamer.json, group: await GamePsw.groupScore(group), ok: true});
+}
+
+async function gamepswgo(c: Context, req: Request, res: Response, person: Person, bot: TelegramBot) {
+    const groupreq = req.body.group;
+    const psw = req.body.psw;
+    const ruleNumber = req.body.ruleNumber;
+    const group = person.json.group?person.json.group:groupreq;
+    let gamer = await GamePsw.getById(person.json.tguserid);
+    if (gamer === undefined) {
+        return res.status(404).json({ok: false});
+    } else {
+        await gamer.ruleNumberPassed(ruleNumber, psw);
+        return res.status(200).json({gamer: gamer.json, group: await GamePsw.groupScore(group), ok: true});
     }
 }
 
