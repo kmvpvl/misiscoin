@@ -216,7 +216,7 @@ async function gameminesgo(c: Context, req: Request, res: Response, person: Pers
         return res.status(404).json();
     }
     const whereto = req.body.whereto;
-    const right = await field.Goto(person.json.tguserid, whereto);
+    const right = await field.Goto(person, whereto);
     if (right) {
         return res.status(200).json({field: field.json, ok: true});
     } else {
