@@ -61,17 +61,17 @@ export default class GameMinesField extends MongoProto<IGameMinesField> {
             const tr = new Transaction(undefined, {
                 created: new Date(),
                 blocked: false,
-                to: who.uid,
-                from: new Types.ObjectId('36e7fdc7a6d2d239006cf289'),
-                count: 10
+                from: who.uid,
+                to: new Types.ObjectId('36e7fdc7a6d2d239006cf289'),
+                count: 1
             });
             await tr.save();
         } else {
             const tr = new Transaction(undefined, {
                 created: new Date(),
                 blocked: false,
-                from: who.uid,
-                to: new Types.ObjectId('36e7fdc7a6d2d239006cf289'),
+                to: who.uid,
+                from: new Types.ObjectId('36e7fdc7a6d2d239006cf289'),
                 count: 10
             });
             await tr.save();
