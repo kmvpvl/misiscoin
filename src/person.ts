@@ -47,7 +47,7 @@ export default class Person extends MongoProto<IPerson> {
     }
     async getProducts(): Promise<Array<IProduct>> {
         const products = await mongoProducts.aggregate([{
-            $match: {"owner":this.uid}
+            $match: {"owner":this.uid, blocked: false}
         }]);
         return products;
     }
