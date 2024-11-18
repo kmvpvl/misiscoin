@@ -144,6 +144,7 @@ api.register({
     gamepswinit: async (c, req, res, person) => gamepswinit(c, req, res, person, bot),
     gamepswgo: async (c, req, res, person) => gamepswgo(c, req, res, person, bot),
     gametapgo: async (c, req, res, person) => gametapgo(c, req, res, person, bot),
+    gametrigo: async (c, req, res, person) => gametrigo(c, req, res, person, bot),
 
     validationFail: (c, req, res) => res.status(400).json({ err: c.validation.errors }),
     notFound: (c, req, res) => notFound(c, req, res),
@@ -212,6 +213,21 @@ async function gameminesmakefield(c: Context, req: Request, res: Response, perso
 }
 
 async function gameminesgo(c: Context, req: Request, res: Response, person: Person, bot: TelegramBot) {
+    const group = person.json.group?person.json.group:"";
+    let field = await GameMinesField.getByGroup(group);
+    if (field === undefined) {
+        return res.status(404).json();
+    }
+    const whereto = req.body.whereto;
+    const right = await field.Goto(person, whereto);
+    if (right) {
+        return res.status(200).json({field: field.json, ok: true});
+    } else {
+        return res.status(203).json({field: field.json, ok: false});
+    }
+}
+
+async function gametrigo(c: Context, req: Request, res: Response, person: Person, bot: TelegramBot) {
     const group = person.json.group?person.json.group:"";
     let field = await GameMinesField.getByGroup(group);
     if (field === undefined) {
