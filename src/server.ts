@@ -13,6 +13,7 @@ import Product from './product';
 import GameMinesField from './gamemines';
 import GamePsw from './gamepsw';
 import GameTap from './gametap';
+import GameTriField from './gametri';
 
 export default function checkSettings(){
     const dotenv = require('dotenv');
@@ -229,16 +230,21 @@ async function gameminesgo(c: Context, req: Request, res: Response, person: Pers
 
 async function gametrigo(c: Context, req: Request, res: Response, person: Person, bot: TelegramBot) {
     const group = person.json.group?person.json.group:"";
-    let field = await GameMinesField.getByGroup(group);
+    let field = await GameTriField.getByTgId(person);
     if (field === undefined) {
         return res.status(404).json();
     }
-    const whereto = req.body.whereto;
-    const right = await field.Goto(person, whereto);
-    if (right) {
-        return res.status(200).json({field: field.json, ok: true});
+    const whereto = parseInt(req.body.whereto);
+    const mat = await field.getAvg();
+    if (whereto !== undefined) {
+        const right = await field.Goto(person, whereto);
+        if (right) {
+            return res.status(200).json({field: field.json, avg: mat, ok: true});
+        } else {
+            return res.status(203).json({field: field.json, avg: mat, ok: false});
+        }
     } else {
-        return res.status(203).json({field: field.json, ok: false});
+        return res.status(200).json({field: field.json, avg: mat, ok: true});
     }
 }
 
