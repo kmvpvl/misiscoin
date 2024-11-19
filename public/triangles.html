@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="stylesheet" href="misiscoin.css"/>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="fetch.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+<script>
+    var gamemap;
+    var tguserid = window.Telegram.WebApp.initDataUnsafe.user.id;
+
+
+    Telegram.WebApp.expand();
+    const params = new URLSearchParams(document.location.search);
+    function RGBtoHex(R, G, B) {
+        const ctoh = (c)=>c.toString(16).length === 1?"0"+c.toString(16):c.toString(16);
+        return "#"+ctoh(R)+ctoh(G)+ctoh(B);
+    }
+    function drawField() {
+        $('cell').text('');
+        $('cell').css('background-color', "black");
+        if (params.get("admin")) {}
+        if (gamemap.field.where === undefined) {
+            $('h2:not([tag])').css("color", RGBtoHex(gamemap.field.R, gamemap.field.G, gamemap.field.B));
+        } else {
+            $('h2:not([tag])').css("color", "unset");
+            $(`cell[tag=${gamemap.field.where}]`)
+                .append ('Я')
+                .css ("color", RGBtoHex(gamemap.field.R, gamemap.field.G, gamemap.field.B))
+                .css('background-color', "white");
+        }
+        for (const avg of gamemap.avg) {
+            if (avg._id == 100){
+                $(`[tag=${avg._id}]`).css('color', RGBtoHex(avg.R, avg.G, avg.B))    
+            } else 
+            $(`[tag=${avg._id}]`).css('background-color', RGBtoHex(avg.R, avg.G, avg.B)).text(avg.count);
+        }
+        $('total').text(`К: ${gamemap.field.R}; З: ${gamemap.field.G}; С: ${gamemap.field.B}. Ходов: ${gamemap.field.stepCount}. Ячейка: ${gamemap.field.where}`);
+    }
+    $(document).ready(()=> {
+        for (let i = 99; i >=0; i--) $('field').append($(`<cell tag="${i}"/>`));
+        $('[tag]').on('click', event => {
+            //debugger
+            fetchCommand("gametrigo", {whereto: event.currentTarget.attributes["tag"].value}, res=> {
+                gamemap = res;
+                drawField();
+            }, err=> {
+
+            });
+        });
+        //setInterval(updateField, 3000);
+        if (params.get("admin")) {
+            $('h1').append($('<select><option>БЭК-24-1</option><option>БЭК-24-2</option><option>БЭК-24-3</option><option>БЭК-24-4</option><option>БЭК-24-5</option><option>БЭК-24-6</option><option>БЭК-24-7</option><option>БТД-24-1</option></select>'));
+            $('select').change(()=>updateField())
+        }
+        fetchCommand("gametrigo", undefined, res=>{
+            gamemap = res;
+            drawField();
+        }, err=>{
+
+        });
+    })
+</script>
+<style>
+    * {
+        box-sizing: border-box;
+        --border: 1px solid black;
+        --padding: 1px;
+    }
+    body, html {
+        font-family: "UbuntuMono", monospace;
+        min-height: 100%;
+        max-height: 100%;
+        min-width: 100%;
+        max-width: 100%;
+        overflow: hidden;
+        width: 100%;
+        height:100%;
+        margin: 0;
+        color: var(--tg-theme-text-color);
+        background-color: var(--tg-theme-bg-color);
+        padding: 5px;
+    }
+    content {
+        min-height: 100%;
+        max-height: 100%;
+        min-width: 100%;
+        max-width: 100%;
+        overflow:hidden;
+        width: 100%;
+        height:100%;
+        display: grid;
+        grid-template-rows: auto auto auto 1fr auto; /* 1fr auto;*/
+    }
+    field {
+        display: grid;
+        min-width: 100%;
+        max-width: 100%;
+        min-height: 100%;
+        max-height: 100%;
+        overflow: auto;
+        gap: 1px;
+        width: 100%;
+        height: 100%;
+        grid-template-columns: repeat(10, 1fr);
+        grid-template-rows: repeat(10, 1fr);
+        background-color: black;
+    }
+
+    cell {
+        border: 1px solid white;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+        text-align: center;
+        padding-top: 25%;
+        background-color: black;
+    }
+    h2 {
+        text-align: center;
+    }
+</style>
+</head>
+<body>
+    <content>
+    <h1>Треугольники<span></span></h1>
+    <total></total>
+    <h2 tag="100">Finish</h2>
+    <field>
+    </field>
+    <h2>Start</h2>
+    </content> 
+</body>
+</html>

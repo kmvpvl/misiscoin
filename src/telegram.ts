@@ -285,7 +285,7 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                 } else {
                     const whom = msg_arr[1];
                     const persons = await mongoPersons.aggregate([
-                        {$match: {group: msg_arr[1]}}
+                        {$match: {group: msg_arr[1], blocked: false}}
                     ]);
                     for (const pers of persons){
                         const tr = new Transaction(undefined, {
