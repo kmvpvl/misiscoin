@@ -14,6 +14,7 @@ import GameMinesField from './gamemines';
 import GamePsw from './gamepsw';
 import GameTap from './gametap';
 import GameTriField from './gametri';
+import GameWordField from './gameword';
 
 export default function checkSettings(){
     const dotenv = require('dotenv');
@@ -146,6 +147,7 @@ api.register({
     gamepswgo: async (c, req, res, person) => gamepswgo(c, req, res, person, bot),
     gametapgo: async (c, req, res, person) => gametapgo(c, req, res, person, bot),
     gametrigo: async (c, req, res, person) => gametrigo(c, req, res, person, bot),
+    gamewordgo: async (c, req, res, person) => gamewordgo(c, req, res, person, bot),
 
     validationFail: (c, req, res) => res.status(400).json({ err: c.validation.errors }),
     notFound: (c, req, res) => notFound(c, req, res),
@@ -245,6 +247,27 @@ async function gametrigo(c: Context, req: Request, res: Response, person: Person
         }
     } else {
         return res.status(200).json({field: field.json, avg: mat, ok: true});
+    }
+}
+
+async function gamewordgo(c: Context, req: Request, res: Response, person: Person, bot: TelegramBot) {
+    const group = person.json.group?person.json.group:"";
+
+    let field = await GameWordField.getByTgId(person);
+    
+    if (field === undefined) {
+        return res.status(404).json();
+    }
+    const myword = req.body.myword;
+    const checkword = req.body.checkword;
+    if (myword !== undefined) {
+        const ret = await field.setMyWord(person, myword);
+        return res.status(200).json({field: field.json, stats: await field.getStats(group), ok: ret});
+    } else if (checkword !== undefined){
+        await field.checkWord(person, checkword);
+        return res.status(200).json({field: field.json, stats: await field.getStats(group), ok: true});
+    } else {
+        return res.status(200).json({field: field.json, stats: await field.getStats(group), ok: true});
     }
 }
 

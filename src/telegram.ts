@@ -361,12 +361,14 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                     person.json.emission?
                         [
                         [{text: "Минное поле (Админ)", web_app: {url: `${process.env.tg_web_hook_server}/game_mines.html?admin=1`}}],
+                        [{text: "Слово (Админ)", web_app: {url: `${process.env.tg_web_hook_server}/word.html?admin=1`}}],
                         [{text: "Треугольники (Админ)", web_app: {url: `${process.env.tg_web_hook_server}/triangles.html?admin=1`}}],
                         [{text: "Пароль (Админ)", web_app: {url: `${process.env.tg_web_hook_server}/password.html?admin=1`}}]
                         ]
                         :
                         [
                         [{text: "Минное поле", web_app: {url: `${process.env.tg_web_hook_server}/game_mines.html`}}],
+                        [{text: "Слово", web_app: {url: `${process.env.tg_web_hook_server}/word.html`}}],
                         [{text: "Треугольники", web_app: {url: `${process.env.tg_web_hook_server}/triangles.html`}}],
                         [{text: "Пароль", web_app: {url: `${process.env.tg_web_hook_server}/password.html`}}]
                         ],
