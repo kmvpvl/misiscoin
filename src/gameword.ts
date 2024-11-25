@@ -69,7 +69,7 @@ export default class GameWordField extends MongoProto<IGameWordField> {
     async getStats(group: string): Promise<Array<[string, number]>> {
         const ret: Array<[string, number]> = [];
         const ou = await mongoGameWordField.aggregate([
-            {$match: {group:group}},
+            {$match: {group:group, secret: true}},
             //{$match: {$expr: {$ne:["$tguserid", this.json.tguserid]}}}
         ]);
         for (const o of ou) {
@@ -91,7 +91,7 @@ export default class GameWordField extends MongoProto<IGameWordField> {
         if (this.json.myword == "") return false;
         if (!this.json.secret) return false; 
         const ou = await mongoGameWordField.aggregate([
-            {$match: {group:who.json.group}},
+            {$match: {group:who.json.group, secret: true}},
             {$match: {$expr: {$ne:["$tguserid", this.json.tguserid]}}},
             {$match: {myword: word}}
         ]);
