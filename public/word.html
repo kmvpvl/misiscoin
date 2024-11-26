@@ -45,10 +45,10 @@
 
         });
         $('#myword').on('input', ()=> {
-            $('#start').prop('disabled', !/^[а-я]{4,4}$/gm.test($('#myword').val()) )
+            $('#start').prop('disabled', !/^[а-я]{5,5}$/gm.test($('#myword').val()) )
         });
         $('#checkword').on('input', ()=> {
-            $('#check').prop('disabled', !/^[а-я]{4,4}$/gm.test($('#checkword').val()) )
+            $('#check').prop('disabled', !/^[а-я]{5,5}$/gm.test($('#checkword').val()) )
         })
         $('#start').on('click', ()=>{
             fetchCommand("gamewordgo", {myword: $('#myword').val()}, res=> {
