@@ -98,7 +98,8 @@ export default class GameWordField extends MongoProto<IGameWordField> {
         for (const o of ou) {
             const vis = new GameWordField(undefined, o);
             vis.json.secret = false;
-            this.json.stepCount++;
+            this.json.stepCount = this.json.stepCount + 1;
+            await this.save();
             await vis.save();
         }
         return ou.length > 0;
