@@ -15,6 +15,8 @@ import GamePsw from './gamepsw';
 import GameTap from './gametap';
 import GameTriField from './gametri';
 import GameWordField from './gameword';
+import { mongoGameChessField } from './gamechess';
+import MongoProto from './mongoproto';
 
 export default function checkSettings(){
     const dotenv = require('dotenv');
@@ -148,6 +150,7 @@ api.register({
     gametapgo: async (c, req, res, person) => gametapgo(c, req, res, person, bot),
     gametrigo: async (c, req, res, person) => gametrigo(c, req, res, person, bot),
     gamewordgo: async (c, req, res, person) => gamewordgo(c, req, res, person, bot),
+    gamechess: async (c, req, res, person) => gamechess(c, req, res, person, bot),
 
     validationFail: (c, req, res) => res.status(400).json({ err: c.validation.errors }),
     notFound: (c, req, res) => notFound(c, req, res),
@@ -269,6 +272,14 @@ async function gamewordgo(c: Context, req: Request, res: Response, person: Perso
     } else {
         return res.status(200).json({field: field.json, stats: await field.getStats(group), ok: true});
     }
+}
+
+async function gamechess(c: Context, req: Request, res: Response, person: Person, bot: TelegramBot) {
+    MongoProto.connectMongo();
+    const field = await mongoGameChessField.aggregate([
+        {$match: {color: {$exists: true}}}
+    ]);
+    return res.status(200).json({field: field, ok: true});
 }
 
 async function gamepswinit(c: Context, req: Request, res: Response, person: Person, bot: TelegramBot) {

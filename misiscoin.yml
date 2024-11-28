@@ -97,6 +97,13 @@ paths:
       responses:
         '200':
           description: OK
+  /gamechess:
+    post:
+      operationId: gamechess
+      security: []
+      responses:
+        '200':
+          description: OK
 security:
   - MisisCoinTGUserId: []
     TGQueryCheckString: []
