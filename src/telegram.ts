@@ -5,6 +5,7 @@ import Person, { IPerson, mongoPersons } from "./person";
 import Product from "./product";
 import Transaction from "./transaction";
 import { Types } from "mongoose";
+import GameChessField, { IGameChessField, mongoGameChessField } from "./gamechess";
 
 export default async function telegram(c: any, req: Request, res: Response, bot: TelegramBot) {    
     const tgData: TelegramBot.Update = req.body;
@@ -373,6 +374,75 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                         [{text: "Пароль", web_app: {url: `${process.env.tg_web_hook_server}/password.html`}}]
                         ],
                 }});
+                return true;
+            case "/c":
+            case "/chess":
+                const player = await GameChessField.getByTgId(person);
+                if (player !== undefined){
+                    if  (player.json.color === undefined) {
+                        bot.sendMessage(chat_id, "Вам не назначен цвет, обратитесь к распорядителю");
+                    } else {
+                        const chfrom = msg_arr[1];
+                        const chto = msg_arr[2];
+                        const chhm = parseInt(msg_arr[3]);
+
+                        if (chfrom === undefined || chto === undefined || chhm === undefined) {
+                            bot.sendMessage(chat_id, "Часть параметров пустые, ход не выполнен");
+                            return true;
+                        }
+                        if (parseInt(chto.charAt(1)) < 1 || parseInt(chto.charAt(1)) > 8 || chto.charAt(0) < "a" || chto.charAt(0) > "h") {
+                            bot.sendMessage(chat_id, "Неправильно указана клетка прибытия");
+                            return true;
+                        }
+                        if (Math.abs (parseInt(chto.charAt(1)) - parseInt(chfrom.charAt(1))) > 3-Math.floor(Math.log10(chhm)) || Math.abs(chto.charCodeAt(0) - chfrom.charCodeAt(0)) > 3-Math.floor(Math.log10(chhm))) {
+                            bot.sendMessage(chat_id, "Нельзя так далеко ходить");
+                            return true;
+                        }
+                        if (player.json.whereAndHowMany !== undefined) {
+                            const fromIndex = player.json.whereAndHowMany.findIndex(el=>el.where === chfrom);
+                            if (fromIndex !== -1 || player.json.whereAndHowMany[fromIndex].howmany < chhm) {
+                                let toIndex = player.json.whereAndHowMany.findIndex(el=>el.where === chto);
+                                let sumOnDest = 0;
+                                if (toIndex === -1) {
+                                    player.json.whereAndHowMany[fromIndex].howmany -= chhm;
+                                    if (player.json.whereAndHowMany[fromIndex].howmany === 0) player.json.whereAndHowMany.splice(fromIndex, 1);
+                                    player.json.whereAndHowMany.push({where: chto, howmany: chhm});
+                                    sumOnDest = chhm;
+                                    await player.save();
+                                } else {
+                                    player.json.whereAndHowMany[fromIndex].howmany -= chhm;
+                                    player.json.whereAndHowMany[toIndex].howmany += chhm;
+                                    sumOnDest = player.json.whereAndHowMany[toIndex].howmany;
+                                    if (player.json.whereAndHowMany[fromIndex].howmany === 0) player.json.whereAndHowMany.splice(fromIndex, 1);
+                                    await player.save();
+                                }
+                                const othersPlayers: IGameChessField[] = await mongoGameChessField.aggregate([
+                                    {$match:{$expr: {$ne: ["$tguserid", player.json.tguserid]}}},
+                                    {$match: {"whereAndHowMany": {$elemMatch:{"where":chto, "howmany":{$lte:sumOnDest}}}}}
+                                ]);
+                                toIndex = player.json.whereAndHowMany.findIndex(el=>el.where === chto);
+                                for (const otherPlayer of othersPlayers) {
+                                    const toDelElIdx = otherPlayer.whereAndHowMany?.findIndex(el=>el.where === chto);
+                                    if (otherPlayer.whereAndHowMany !== undefined && toDelElIdx !== undefined && toDelElIdx >= 0) {
+                                        player.json.whereAndHowMany[toIndex].howmany += otherPlayer.whereAndHowMany[toDelElIdx].howmany;
+                                        bot.sendMessage(chat_id, `Вы съели ${otherPlayer.color} ${otherPlayer.whereAndHowMany[toDelElIdx].howmany}`);
+                                        otherPlayer.whereAndHowMany.splice(toDelElIdx, 1);
+                                        const op = new GameChessField(undefined, otherPlayer);
+                                        await op.save();
+                                        await player.save();
+                                    }
+
+                                }
+                            } else {
+                                bot.sendMessage(chat_id, `На клетке ${chfrom} недостаточно фигур`);
+                            }
+                        }
+                        bot.sendMessage(chat_id, `Вы передвинули ${chhm} из ${chfrom} в ${chto}`);
+                        
+                    }
+                } else {
+
+                }
                 return true;
             default: 
                 bot.sendMessage(chat_id, `'${command_name}' is unknoun command. Check your spelling`);

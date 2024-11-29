@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="stylesheet" href="misiscoin.css"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+<script>
+    function fetchCommand(command, requestData, successcb, errorcb) {
+        $.ajaxSetup({
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            }
+        });
+        $.post(command, JSON.stringify(requestData), (data, status, xhdr)=>{
+            if ('success' == status) {
+                successcb(data);
+            } else {
+                errorcb(xhdr);
+            }
+        })
+        .fail((xhr, status, errorObj)=>{
+            errorcb(xhr);
+        });
+    }
+    function drawField() {
+        $('[tag]').html('');
+        for (const player of gamemap.field) {
+            for (const whm of player.whereAndHowMany) {
+                $(`[tag="${whm.where}"]`).append(`<span style="color: ${player.color};">${whm.howmany}</span>`);
+            }
+        }
+    }
+    function letter(x) {
+        return String.fromCharCode("a".charCodeAt(0)+x-1);
+    }
+    function updateField(){
+        fetchCommand("gamechess", undefined, res=>{
+            gamemap = res;
+            drawField();
+        }, err=>{
+
+        });
+    }
+    $(document).ready(()=> {
+        for (let i = 0; i < 9; i++) {
+            for (let j = 0; j < 9; j++) {
+                if (i == 0 || j == 0) {
+                    $('field').append($(`<label>${i == 0?(j==0?"":letter(j)):i}</label>`));
+                } else 
+                $('field').append($(`<cell tag="${letter(j)+i}"/>`));
+            }
+        }
+        setInterval(updateField, 3000);
+        updateField();
+    })
+</script>
+<style>
+    * {
+        box-sizing: border-box;
+        --border: 1px solid black;
+        --padding: 1px;
+    }
+    body, html {
+        font-family: "UbuntuMono", monospace;
+        min-height: 100%;
+        max-height: 100%;
+        min-width: 100%;
+        max-width: 100%;
+        overflow: hidden;
+        width: 100%;
+        height:100%;
+        margin: 0;
+        color: var(--tg-theme-text-color);
+        background-color: var(--tg-theme-bg-color);
+        padding: 5px;
+    }
+    content {
+        min-height: 100%;
+        max-height: 100%;
+        min-width: 100%;
+        max-width: 100%;
+        overflow:hidden;
+        width: 100%;
+        height:100%;
+        display: grid;
+        grid-template-rows: auto auto 1fr; /* 1fr auto;*/
+    }
+    field {
+        display: grid;
+        min-width: 100%;
+        max-width: 100%;
+        min-height: 100%;
+        max-height: 100%;
+        overflow: auto;
+        gap: 1px;
+        width: 100%;
+        height: 100%;
+        grid-template-columns: 2em repeat(8, 10vh);
+        grid-template-rows: auto repeat(8, 1fr);
+        --background-color: black;
+    }
+
+    cell {
+        border: 1px solid black;
+        height: 100%;
+        width: 10vh;
+        cursor: pointer;
+        text-align: center;
+        --background-color: black;
+        color: white;
+        display: grid;
+        grid-template-rows: auto auto auto auto;
+    }
+    label {
+        position: relative;
+        top: 20%;
+        height: 100%;
+        --padding-top: 50%;
+        text-align: center;
+    }
+    h2 {
+        text-align: center;
+    }
+</style>
+</head>
+<body>
+    <content>
+    <h1>Шахматы<span></span></h1>
+    <total></total>
+    <field>
+    </field>
+    </content> 
+</body>
+</html>
