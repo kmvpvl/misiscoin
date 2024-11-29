@@ -385,6 +385,10 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                         const chfrom = msg_arr[1];
                         const chto = msg_arr[2];
                         const chhm = parseInt(msg_arr[3]);
+                        if (isNaN(chhm)) {
+                            bot.sendMessage(chat_id, "Не удалось распознать количество перемещаемых воинов");
+                            return true;
+                        }
 
                         if (chfrom === undefined || chto === undefined || chhm === undefined) {
                             bot.sendMessage(chat_id, "Часть параметров пустые, ход не выполнен");
