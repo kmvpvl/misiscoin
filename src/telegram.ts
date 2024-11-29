@@ -385,7 +385,7 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                         const chfrom = msg_arr[1];
                         const chto = msg_arr[2];
                         const chhm = parseInt(msg_arr[3]);
-                        if (isNaN(chhm)) {
+                        if (isNaN(chhm) || chhm === 0) {
                             bot.sendMessage(chat_id, "Не удалось распознать количество перемещаемых воинов");
                             return true;
                         }
