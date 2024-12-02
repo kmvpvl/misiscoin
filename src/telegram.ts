@@ -404,7 +404,7 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                         }
                         if (player.json.whereAndHowMany !== undefined) {
                             const fromIndex = player.json.whereAndHowMany.findIndex(el=>el.where === chfrom);
-                            if (fromIndex !== -1 || player.json.whereAndHowMany[fromIndex].howmany < chhm) {
+                            if (fromIndex !== -1 && player.json.whereAndHowMany[fromIndex].howmany < chhm) {
                                 let toIndex = player.json.whereAndHowMany.findIndex(el=>el.where === chto);
                                 let sumOnDest = 0;
                                 if (toIndex === -1) {
