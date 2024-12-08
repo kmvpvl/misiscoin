@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<style>
+    * {
+        box-sizing: border-box;
+    }    
+    html, body {
+        font-family: "UbuntuMono", monospace;
+        min-height: 100%;
+        max-height: 100%;
+        min-width: 100%;
+        max-width: 100%;
+        overflow: hidden;
+        width: 100%;
+        height:100%;
+        margin: 0;
+        color: var(--tg-theme-text-color);
+        background-color: var(--tg-theme-bg-color);
+    }
+    body {
+        padding: 5px;
+    }
+    content {
+        width: 100%;
+        height: 100%;
+        display: grid;
+        grid-template-rows: auto auto 1fr;
+    }
+    field {
+        display: grid;
+        grid-template-columns: repeat(30, 2.5%);
+        grid-template-rows: repeat(30, 2.5%);
+        gap: 1px;
+        width: 100%;
+        height: 100%;
+    }
+    field > cell {
+        border: 1px solid black;
+    }
+</style>
+</head>
+<body>
+    <h1>Life</h1>
+    <tool><button id="btnStart">Start</button><button id="btnPause">Pause</button><score></score></tool>
+    <field></field>
+<script>
+let maxInitCells = 30;
+let mx0 = 0;
+let mx1 = 0;
+let born = [0, 0];
+let interval;
+const dim = 30;
+let colors = ["red", "blue"];
+let field = [[], []];
+function drawField() {
+    $('cell[tag]').css('backgroundColor', 'white').removeAttr('specie');
+    colors.forEach((color, colorIndex)=>{
+        field[colorIndex].forEach(cell=>$(`cell[tag="${cell}"]`).css('backgroundColor', color).attr('specie', color));
+    });
+    $('score').html(`Cells remaining: ${maxInitCells}, ${colors[0]}: ${field[0].length} (max: ${mx0}) | ${colors[1]}: ${field[1].length} (max: ${mx1})`);
+}
+
+function goLive() {
+    const freeCells = $('cell:not([specie])');
+    const addedCells = [];
+    for (const i in colors) addedCells.push([]);
+
+    for (const el of freeCells) {
+        const countSpecies = [];
+        const cellNumber = parseInt($(el).attr('tag'));
+        for (const c of colors) {
+            countSpecies.push(calcNeighbors(c, cellNumber));
+        }
+        for (const cs in countSpecies) {
+            if (countSpecies[cs] === 3) {
+                addedCells[cs].push(cellNumber);
+            }
+        }        
+    }
+    const deletedCells = [];
+    for (const i in colors) {
+        deletedCells.push([]);
+        for (const j in field[i]) {
+            const c = calcNeighbors(colors[i], field[i][j]);
+            if (c < 2 || c > 3) deletedCells[i].push(field[i][j]);
+        }
+        field[i] = field[i].filter(v=>!deletedCells[i].includes(v));
+    }
+    for (const i in addedCells) field[i].push(...addedCells[i]);
+    mx0 = Math.max(mx0, field[0].length);
+    mx1 = Math.max(mx1, field[1].length);
+    drawField();
+}
+
+const coords2number = (x, y) => y * dim + x;
+const number2coords = (number)=>[number % dim, Math.floor(number/dim)];
+function calcNeighbors(color, cellNumber) {
+    const myColorIndex = colors.findIndex(v=>color === v);
+    if (myColorIndex === -1) return 0;
+    const checkCell = number => field[myColorIndex].includes(number)?1:0;
+    ret = 0;
+    const coords = number2coords(cellNumber);
+    if (coords[0] > 0) {
+        ret += checkCell(coords2number(coords[0]-1, coords[1]));
+        if (coords[1] > 0) ret += checkCell(coords2number(coords[0]-1, coords[1]-1));
+        if (coords[1] < 29) ret += checkCell(coords2number(coords[0]-1, coords[1]+1));
+    }
+
+    if (coords[1] > 0) ret += checkCell(coords2number(coords[0], coords[1]-1));
+    if (coords[1] < 29) ret += checkCell(coords2number(coords[0], coords[1]+1));
+
+    if (coords[0] < 29) {
+        ret += checkCell(coords2number(coords[0]+1, coords[1]));
+        if (coords[1] > 0) ret += checkCell(coords2number(coords[0]+1, coords[1]-1));
+        if (coords[1] < 29) ret += checkCell(coords2number(coords[0]+1, coords[1]+1));
+    }
+    return ret;
+}
+
+$(document).ready (()=> {
+    $('#btnPause').hide();
+    for (let i = 0; i < dim * dim; i++) $('field').append($(`<cell tag="${i}"></cell>`));
+    $('cell[tag]').on('click contextmenu', event=> {
+        if (maxInitCells === 0) return;
+        const ci = event.type === "contextmenu"? 1:0;
+        const number = parseInt(event.currentTarget.getAttribute("tag"));
+        field[ci].push(number);
+        event.preventDefault();
+        event.stopPropagation();
+        maxInitCells--;
+        //const color = $(`cell[tag="${number}"]`).attr('specie');
+        drawField();
+        //alert(calcNeighbors(color, number));
+    });
+    $('#btnStart').click(()=>{
+        interval = setInterval(goLive, 500);
+        $('#btnStart').hide();
+        $('#btnPause').show();
+    })
+    $('#btnPause').click(()=>{
+        clearInterval(interval);
+        $('#btnStart').show();
+        $('#btnPause').hide();
+    })
+    drawField();
+})    
+</script>
+</body>
+</html>
