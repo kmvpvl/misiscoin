@@ -25,6 +25,7 @@ export const ProductSchema = new Schema({
 })
 
 interface Depositor extends IPerson {
+    sum: number;
     contributions: Array<{
         validthru?: Date;
         sum: number;
