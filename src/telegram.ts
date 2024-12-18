@@ -50,6 +50,37 @@ async function callback_process(tgData: TelegramBot.Update, bot: TelegramBot, pe
             await person.setGroup(cbcommand[1]);
             bot.answerCallbackQuery(tgData.callback_query?.id as string, {text: `Группа выбрана`});
             break;
+        case 'close':
+            const prodName = cbcommand[1];
+            const prod = await Product.getByName(prodName);
+            if (prod === undefined) {
+                bot.answerCallbackQuery(tgData.callback_query?.id as string, {text: `Product ${JSON.stringify(prodName)} not found`});
+                return true;
+            }
+            const contributors = await prod.contributors();
+            contributors.forEach( (contributor, i)=>{
+                if (contributor.blocked) return;
+                setTimeout( async ()=> {
+                    const transaction = new Transaction(undefined, {
+                        from: prod.uid,
+                        to: new Types.ObjectId(contributor._id),
+                        count: contributor.sum,
+                        created: new Date(),
+                        blocked: false,
+                    });
+                    await transaction.save();
+                    //await bot.answerCallbackQuery(tgData.callback_query?.id as string, {text: `${contributor.tguserid} Продукт ${prodName} успешно защищен. Вам вернулись Ваши инвестии ${contributor.sum}`});
+                    try {
+                        await bot.sendMessage(contributor.tguserid, `Продукт ${prodName} успешно защищен. Вам вернулись Ваши инвестии ${contributor.sum}`);
+                    } catch(e) {
+                        console.error(`Message to tgid = '${contributor.tguserid}' wasn't sent`);
+                    }
+                    console.log(`${contributor.tguserid} Продукт ${prodName} успешно защищен. Вам вернулись Ваши инвестии ${contributor.sum}`);
+                }, 2000 * i)
+            });
+            bot.sendMessage(chat_id, `Запущеп процесс оповещения контрибуторов продукта ${prodName}`);
+            prod.json.closed = true;
+            await prod.save();
     }
     return true;
 }
@@ -155,7 +186,10 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                 } else {
                     const prod = await Product.getByName(msg_arr[1]);
                     if (prod !== undefined) {
-                        bot.sendMessage(chat_id, "Продукт:", {reply_markup: {inline_keyboard: [[{text: `${prod.json.name}: ${prod.json.desc}`, web_app: {url: `${process.env.tg_web_hook_server}/product.html?name=${encodeURIComponent(prod.json.name)}`}}]]}});
+                        let menu = [];
+                        menu.push([{text: `${prod.json.name}: ${prod.json.desc}`, web_app: {url: `${process.env.tg_web_hook_server}/product.html?name=${encodeURIComponent(prod.json.name)}`}}]);
+                        if (person.json.emission && !prod.json.closed) menu.push( [{text: `Успех`, callback_data: `close:${prod.json.name}`}]);
+                        bot.sendMessage(chat_id, "Продукт:", {reply_markup: {inline_keyboard: menu}});
                     } else {
                         bot.sendMessage(chat_id, `Продукт '${msg_arr[1]}' не найден`);
                     }
@@ -178,6 +212,10 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                 }
                 return true;
             case '/spend':
+                if (new Date().getTime() > new Date("2024-12-27T00:00:00").getTime()) {
+                    bot.sendMessage(chat_id, "Все переводы в системе запрещены");
+                    return true;
+                }
                 if (msg_arr?.length !== 4) {
                     bot.sendMessage(chat_id, `Неправильный формат команды '/spend'. Попробуйте /spend whom howmuch options`);
                     return false;
@@ -221,6 +259,10 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                     }
 
                     if (whomProduct !== undefined) {
+                        if (whomProduct.json.closed) {
+                            bot.sendMessage(chat_id, "Проект закрыт");
+                            return true;
+                        }
                         const tr = new Transaction(undefined, {
                             from: person.uid,
                             to: whomProduct.uid,
