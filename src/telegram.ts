@@ -78,6 +78,9 @@ async function callback_process(tgData: TelegramBot.Update, bot: TelegramBot, pe
                     console.log(`${contributor.tguserid} Продукт ${prodName} успешно защищен. Вам вернулись Ваши инвестии ${contributor.sum}`);
                 }, 2000 * i)
             });
+            bot.sendMessage(chat_id, `Запущеп процесс оповещения контрибуторов продукта ${prodName}`);
+            prod.json.closed = true;
+            await prod.save();
     }
     return true;
 }
@@ -185,7 +188,7 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                     if (prod !== undefined) {
                         let menu = [];
                         menu.push([{text: `${prod.json.name}: ${prod.json.desc}`, web_app: {url: `${process.env.tg_web_hook_server}/product.html?name=${encodeURIComponent(prod.json.name)}`}}]);
-                        if (person.json.emission) menu.push( [{text: `Успех`, callback_data: `close:${prod.json.name}`}]);
+                        if (person.json.emission && !prod.json.closed) menu.push( [{text: `Успех`, callback_data: `close:${prod.json.name}`}]);
                         bot.sendMessage(chat_id, "Продукт:", {reply_markup: {inline_keyboard: menu}});
                     } else {
                         bot.sendMessage(chat_id, `Продукт '${msg_arr[1]}' не найден`);
@@ -209,6 +212,10 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                 }
                 return true;
             case '/spend':
+                if (new Date().getTime() > new Date("2024-12-27T00:00:00").getTime()) {
+                    bot.sendMessage(chat_id, "Все переводы в системе запрещены");
+                    return true;
+                }
                 if (msg_arr?.length !== 4) {
                     bot.sendMessage(chat_id, `Неправильный формат команды '/spend'. Попробуйте /spend whom howmuch options`);
                     return false;
@@ -252,6 +259,10 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                     }
 
                     if (whomProduct !== undefined) {
+                        if (whomProduct.json.closed) {
+                            bot.sendMessage(chat_id, "Проект закрыт");
+                            return true;
+                        }
                         const tr = new Transaction(undefined, {
                             from: person.uid,
                             to: whomProduct.uid,

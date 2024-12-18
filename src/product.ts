@@ -9,6 +9,7 @@ export interface IProduct {
     desc: string;
     owner: Types.ObjectId;
     blocked: boolean;
+    closed?: boolean;
     created: Date;
     changed?: Date;
     history?: Array<any>;
@@ -19,6 +20,7 @@ export const ProductSchema = new Schema({
     desc: {type: String, require: true},
     owner: {type: Types.ObjectId, require: true},
     blocked: {type: Boolean, require: true},
+    closed: {type: Boolean, require: false},
     created: {type: Date, require: true},
     changed: {type: Date, require: false},
     history: {type: Array, require: false},
