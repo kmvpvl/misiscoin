@@ -58,6 +58,9 @@ async function callback_process(tgData: TelegramBot.Update, bot: TelegramBot, pe
                 return true;
             }
             const contributors = await prod.contributors();
+            const sum = contributors.reduce<number>((prevSum, curDepositor)=>(!curDepositor.blocked?curDepositor.sum:0)+prevSum, 0);
+            const productOwner = new Person(prod.json.owner);
+            await productOwner.load();
             contributors.forEach( (contributor, i)=>{
                 if (contributor.blocked) return;
                 setTimeout( async ()=> {
@@ -78,10 +81,27 @@ async function callback_process(tgData: TelegramBot.Update, bot: TelegramBot, pe
                     console.log(`${contributor.tguserid} Продукт ${prodName} успешно защищен. Вам вернулись Ваши инвестии ${contributor.sum}`);
                 }, 2000 * i)
             });
-            bot.sendMessage(chat_id, `Запущеп процесс оповещения контрибуторов продукта ${prodName}`);
             prod.json.closed = true;
             await prod.save();
-    }
+            const transaction = new Transaction(undefined, {
+                from: prod.uid,
+                to: productOwner.uid,
+                count: sum,
+                created: new Date(),
+                blocked: false,
+            });
+            await transaction.save();
+            try {
+                await bot.sendMessage(chat_id, `Запущен процесс оповещения контрибуторов продукта ${prodName}`);
+            } catch(e) {
+                console.error(`Message to tgid = '${chat_id}' wasn't sent`);
+            }
+            try {
+                await bot.sendMessage(productOwner.json.tguserid, `Запущен процесс оповещения контрибуторов продукта ${prodName} о закрытии проекта. Вам достаются $${sum}. Разделите их между участниками`);
+            } catch(e) {
+                console.error(`Message to tgid = '${productOwner.json.tguserid}' wasn't sent`);
+            }
+}
     return true;
 }
 
