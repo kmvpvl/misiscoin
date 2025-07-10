@@ -232,10 +232,10 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                 }
                 return true;
             case '/spend':
-                if (new Date().getTime() > new Date("2024-12-27T00:00:00").getTime()) {
-                    bot.sendMessage(chat_id, "Все переводы в системе запрещены");
-                    return true;
-                }
+                //if (new Date().getTime() > new Date("2024-12-27T00:00:00").getTime()) {
+                //    bot.sendMessage(chat_id, "Все переводы в системе запрещены");
+                //    return true;
+                //}
                 if (msg_arr?.length !== 4) {
                     bot.sendMessage(chat_id, `Неправильный формат команды '/spend'. Попробуйте /spend whom howmuch options`);
                     return false;
