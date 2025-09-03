@@ -289,7 +289,7 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                             count: count,
                             created: new Date(),
                             blocked: false,
-                            validthru: what==="c"?undefined:new Date("2024-12-31T21:00:00.000+00:00")
+                            validthru: what==="c"?undefined:new Date("2025-12-31T21:00:00.000+00:00")
                         });
                         const productownder = new Person(whomProduct.json.owner);
                         await productownder.load();
@@ -305,7 +305,7 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                             count: count,
                             created: new Date(),
                             blocked: false,
-                            validthru: what==="c"?undefined:new Date("2024-12-31T21:00:00.000+00:00")
+                            validthru: what==="c"?undefined:new Date("2025-12-31T21:00:00.000+00:00")
                         });
                         await tr.save();
                         bot.sendMessage(chat_id, `Вы заплатили ${count} '${whomPerson.json.name}' успешно`);
@@ -355,7 +355,7 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                             from: person.uid,
                             to: new Types.ObjectId(pers._id),
                             count: 10,
-                            validthru: new Date("2024-12-31T21:00:00.000+00:00"),
+                            validthru: new Date("2025-12-31T21:00:00.000+00:00"),
                             created: new Date(),
                             blocked: false,
                             spendupto: new Date(new Date().getTime() + 1000*60*60*24*7)
