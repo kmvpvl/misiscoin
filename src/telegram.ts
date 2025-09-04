@@ -220,14 +220,15 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                     bot.sendMessage(chat_id, `Ваша группа - ${person.json.group}`);
                 } else {
                     bot.sendMessage(chat_id, `Выберите группу`, {reply_markup: {inline_keyboard: [
-                    [{text: "БЭК-24-1", callback_data: "setgroup:БЭК-24-1"}],
-                    [{text: "БЭК-24-2", callback_data: "setgroup:БЭК-24-2"}],
-                    [{text: "БЭК-24-3", callback_data: "setgroup:БЭК-24-3"}],
-                    [{text: "БЭК-24-4", callback_data: "setgroup:БЭК-24-4"}],
-                    [{text: "БЭК-24-5", callback_data: "setgroup:БЭК-24-5"}],
-                    [{text: "БЭК-24-6", callback_data: "setgroup:БЭК-24-6"}],
-                    [{text: "БЭК-24-7", callback_data: "setgroup:БЭК-24-7"}],
-                    [{text: "БТД-24-1", callback_data: "setgroup:БТД-24-1"}],
+                    [{text: "БЭК-25-1", callback_data: "setgroup:БЭК-25-1"}],
+                    [{text: "БЭК-25-2", callback_data: "setgroup:БЭК-25-2"}],
+                    [{text: "БЭК-25-3", callback_data: "setgroup:БЭК-25-3"}],
+                    [{text: "БЭК-25-4", callback_data: "setgroup:БЭК-25-4"}],
+                    [{text: "БЭК-25-5", callback_data: "setgroup:БЭК-25-5"}],
+                    [{text: "БЭК-25-6", callback_data: "setgroup:БЭК-25-6"}],
+                    [{text: "БЭК-25-7", callback_data: "setgroup:БЭК-25-7"}],
+                    [{text: "БЭК-25-8", callback_data: "setgroup:БЭК-25-8"}],
+                    [{text: "БИН-25-1", callback_data: "setgroup:БИН-25-1"}],
                     ]}});
                 }
                 return true;
