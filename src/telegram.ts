@@ -343,7 +343,7 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                 return true;
             case '/emission':
                 if (person.json.emission === undefined || !person.json.emission) return true;
-                if (msg_arr?.length !== 2) {
+                if (msg_arr?.length > 4) {
                     bot.sendMessage(chat_id, `Неправильный формат команды '/emission'. Попробуйте /emission groupname`);
                     return true;
                 } else {
@@ -351,18 +351,26 @@ async function command_process(tgData: TelegramBot.Update, bot: TelegramBot, per
                     const persons = await mongoPersons.aggregate([
                         {$match: {group: msg_arr[1], blocked: false}}
                     ]);
+                    let portion = 10;
+                    if (msg_arr[2] !== undefined) {
+                        portion = parseInt(msg_arr[2]);
+                    }
+                    let isPermanent = false;
+                    if (msg_arr[3] !== undefined && msg_arr[3] === "c") {
+                        isPermanent = true;
+                    }
                     for (const pers of persons){
                         const tr = new Transaction(undefined, {
                             from: person.uid,
                             to: new Types.ObjectId(pers._id),
-                            count: 10,
-                            validthru: new Date("2025-12-31T21:00:00.000+00:00"),
+                            count: portion,
+                            validthru: isPermanent ? undefined : new Date("2025-12-31T21:00:00.000+00:00"),
                             created: new Date(),
                             blocked: false,
-                            spendupto: new Date(new Date().getTime() + 1000*60*60*24*7)
+                            spendupto: isPermanent ? undefined : new Date(new Date().getTime() + 1000*60*60*24*7)
                         });
                         await tr.save();
-                        bot.sendMessage(pers.tguserid, `Вы получили 10 на счет. Потратьте до: ${tr.json.spendupto?.toLocaleString()}`);
+                        bot.sendMessage(pers.tguserid, `Вы получили ${portion} на счет. ${isPermanent ? "" : `Потратьте до: ${tr.json.spendupto?.toLocaleString()}`}`);
                     }
                     return true;
                 }

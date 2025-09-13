@@ -338,7 +338,7 @@ api.registerSecurityHandler('TGQueryCheckString', async (context, req: Request, 
         const secret_key = createHmac('sha256', "WebAppData").update(process.env.tg_bot_authtoken as string).digest();
         arr.sort((a, b) => a.localeCompare(b));
 
-        const check_hash = createHmac('sha256', secret_key).update(arr.join('\n')).digest('hex');
+        const check_hash = createHmac('sha256', secret_key as any).update(arr.join('\n')).digest('hex');
         return check_hash === hash;
     } catch (e) {
         return false;
