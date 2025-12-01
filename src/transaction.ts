@@ -21,7 +21,7 @@ export interface ITransaction {
 export const TransactionSchema = new Schema({
     from: {type: Types.ObjectId, require: true},
     to: {type: Types.ObjectId, require: true},
-    count: {type: Number, require: true, min: 0},
+    count: {type: Number, require: true},
     blocked: {type: Boolean, require: true},
     created: {type: Date, require: true},
     validthru: {type: Date, require: false},
